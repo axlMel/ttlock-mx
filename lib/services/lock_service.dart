@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class LockService {
-  final String baseUrl = 'https://ueapi.ttlock.com';
+  final String baseUrl = 'https://euapi.ttlock.com';
 
   Future<List> getLocks(String token) async {
     final url = Uri.parse(
