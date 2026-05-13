@@ -6,7 +6,7 @@ class AuthService {
   final String baseUrl = 'https://euapi.ttlock.com';
 
   Future<String?> login(String username, String password) async{
-    print("📡 INICIANDO REQUEST");
+    print("INICIADNO REQUEST");
     
     final url = Uri.parse('$baseUrl/oauth2/token');
     final bytes = utf8.encode(password);
