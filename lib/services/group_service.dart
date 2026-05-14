@@ -16,11 +16,10 @@ class GroupService {
       '&pageSize=100'
       '&date=$date',
     );
-
     print('OBTENIENDO GRUPOS');
     print(url);
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 6; i++) {
       try {
         final response = await http.get(url).timeout(const Duration(seconds: 100));
 
@@ -40,5 +39,37 @@ class GroupService {
       );
     }
     return [];
+  }
+
+  Future<bool> createGroup(String token, String groupName,) async {
+    final date = DateTime.now().millisecondsSinceEpoch;
+    final url = Uri.parse('$baseUrl/v3/group/add',);
+    print('CREANDO GRUPOS');
+    print(url);
+    for (int i = 0; i < 6; i++) {
+      try {
+        final response = await http.post(
+          url,
+          body: {
+            'clientId': '096a5c62f3ae47c39e206d410119d7b3',
+            'accessToken': token,
+            'name': groupName,
+            'date': date.toString(),
+          },
+        ).timeout(const Duration(seconds: 100));
+        print('CREATE GROUP STATUS: ${response.statusCode}');
+        print('CREATE GROUP BODY: ${response.body}');
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          return data['groupId'] != null;
+        }
+      } catch (e) {
+        print('ERROR CREANDO GRUPO: $e');
+      }
+      await Future.delayed(
+        const Duration(seconds: 2),
+      );
+    }
+    return false;
   }
 }

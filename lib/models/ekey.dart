@@ -2,14 +2,18 @@ class EKey {
   final int keyId;
   final int lockId;
   final String lockAlias;
+  final String lockData;
+  final int electricQuantity;
   final String userType;
-  final int groupId;
+  final int? groupId;
   final String groupName;
 
   EKey({
     required this.keyId,
     required this.lockId,
     required this.lockAlias,
+    required this.lockData,
+    required this.electricQuantity,
     required this.userType,
     required this.groupId,
     required this.groupName,
@@ -21,8 +25,10 @@ class EKey {
       keyId: json['keyId'],
       lockId: json['lockId'],
       lockAlias: json['lockAlias'] ?? 'Sin nombre',
+      lockData: json['lockData'],
+      electricQuantity: json['electricQuantity'],
       userType: json['userType'] ?? '',
-      groupId: json['groupId'] ?? 0,
+      groupId: json['groupId'],
       groupName: json['groupName'] ?? '',
     );
   }

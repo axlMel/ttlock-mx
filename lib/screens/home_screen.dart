@@ -12,7 +12,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Group> groups = [];
-  List<EKey> keys = [];
+  List<EKey> allKeys = [];
+  List<EKey> filteredKeys = [];
   bool isLoading = true;
   bool initialized = false;
   late String token;
@@ -30,19 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> loadGroups() async {
     groups = await GroupService().getGroups(token);
-
-    if (groups.isNotEmpty) {
-      selectedGroup = groups.first;
-
-      final allKeys =
-          await EKeyService().getEKeys(token);
-
-      keys = allKeys.where((k) {
-        return k.groupId ==
-            selectedGroup!.groupId;
-      }).toList();
-    }
-
+    allKeys = await EKeyService().getEKeys(token);
+    filteredKeys = allKeys;
     setState(() {
       isLoading = false;
     });
@@ -53,8 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoading = true;
       selectedGroup = group;
     });
-    final allkeys = await EKeyService().getEKeys(token);
-    keys = allkeys.where((k) {
+    filteredKeys = allKeys.where((k) {
       return k.groupId == group.groupId;
     }).toList();
     setState(() {
@@ -62,10 +51,27 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> testCreateGroup() async {
+    final success = await GroupService().createGroup(token, 'TEST APP');
+    await loadGroups();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? 'Grupo creado'
+              : 'Error creando grupo',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('GTekey'),),
+      appBar: AppBar(title: const Text('GTekey'), actions: [
+        IconButton(onPressed: testCreateGroup, icon: const Icon(Icons.add),),
+      ],),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -88,13 +94,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
               Expanded(
                 child: ListView.builder(
-                  itemCount: keys.length,
+                  itemCount: allKeys.length,
                   itemBuilder: (context, index) {
-                    final key = keys[index];
+                    final key = allKeys[index];
                     return ListTile(
                       title: Text(key.lockAlias),
                       subtitle: Text(
-                        "ID ${key.lockId}"
+                        '''
+                        ID ${key.lockId}
+                        Batería ${key.electricQuantity}%
+                        Grupo: ${key.groupName.isEmpty ? "Sin grupo" : key.groupName}
+                        '''
                       ),
                     );
                   },
