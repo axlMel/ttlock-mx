@@ -23,7 +23,7 @@ class EKeyService {
 
     for (var i = 0; i < 6; i++) {
       try {
-        final response = await http.get(url).timeout(const Duration(seconds: 100));
+        final response = await http.get(url).timeout(const Duration(seconds: 45));
         print("EKEY STATUS: ${response.statusCode}");
         print("EKEY BODY: ${response.body}");
         if (response.statusCode == 200) {

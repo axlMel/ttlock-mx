@@ -19,8 +19,7 @@ class EKey {
     required this.groupName,
   });
 
-  factory EKey.fromJson(Map<String, dynamic> json,) {
-
+  factory EKey.fromJson(Map<String, dynamic> json) {
     return EKey(
       keyId: json['keyId'],
       lockId: json['lockId'],
@@ -28,7 +27,7 @@ class EKey {
       lockData: json['lockData'],
       electricQuantity: json['electricQuantity'],
       userType: json['userType'] ?? '',
-      groupId: json['groupId'],
+      groupId: json['groupId'] ?? 0,
       groupName: json['groupName'] ?? '',
     );
   }
