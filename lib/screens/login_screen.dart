@@ -1,3 +1,4 @@
+import 'package:api_app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/auth_manager.dart';
@@ -76,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 245, 248, 250),
+      backgroundColor: AppColors.background,
       //appBar: AppBar(title: const Text('Login GTLock')),
       body: Stack(
         children: [
@@ -317,26 +318,6 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         ],
       ),
-      /* body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: usernameController,
-              decoration: const InputDecoration(labelText: 'Usuario'),
-            ),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Contraseña'),
-            ),
-            const SizedBox(height: 20),
-            isLoading
-                ? const CircularProgressIndicator()
-                : ElevatedButton(onPressed: login, child: const Text('Login')),
-          ],
-        ),
-      ),*/
     );
   }
 }

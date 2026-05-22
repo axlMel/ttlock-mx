@@ -1,9 +1,11 @@
+import 'package:api_app/widgets/lock_card.dart';
 import 'package:flutter/material.dart';
 import '../models/group.dart';
 import '../models/ekey.dart';
 import '../services/auth_manager.dart';
 import '../services/group_service.dart';
 import '../services/ekey_service.dart';
+import '../theme/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,6 +26,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<EKey> getKeysByGroup(int groupId) {
     return allKeys.where((k) => k.groupId == groupId).toList();
+  }
+
+  Widget BuildLocksGrid(List<EKey> keys) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      itemCount: keys.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 2,
+        mainAxisSpacing: 2,
+        childAspectRatio: 0.82,
+      ),
+      itemBuilder: (context, index) {
+        final key = keys[index];
+        return LockCard(
+          keyData: key,
+          onTap: () {
+            showMoveLockDialog(key);
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -241,92 +267,163 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('GTekey'),
-        actions: [
-          IconButton(
-            onPressed: showCreateGroupDialog,
-            icon: const Icon(Icons.add),
-          ),
-          IconButton(onPressed: logout, icon: const Icon(Icons.logout)),
-        ],
-      ),
+      backgroundColor: AppColors.background,
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView(
+          : SafeArea(
+              child: Stack(
+                children: [
+                  // FONDO DECORATIVO
+                  Positioned(
+                    top: -120,
+                    right: -80,
+                    child: Container(
+                      height: 260,
+                      width: 260,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.08),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+
+                  Positioned(
+                    top: 40,
+                    left: -100,
+                    child: Container(
+                      height: 220,
+                      width: 220,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.05),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+
+                  Column(
                     children: [
-                      // SIN GRUPO
-                      if (getUngroupedKeys().isNotEmpty) ...[
-                        const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Text(
-                            "Sin grupo",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-
-                        ...getUngroupedKeys().map((key) {
-                          return ListTile(
-                            title: Text(key.lockAlias),
-
-                            subtitle: Text('Batería ${key.electricQuantity}%'),
-
-                            trailing: const Icon(Icons.edit),
-
-                            onTap: () {
-                              showMoveLockDialog(key);
-                            },
-                          );
-                        }),
-                      ],
-
-                      // GRUPOS
-                      ...groups.map((group) {
-                        final groupKeys = getKeysByGroup(group.groupId);
-
-                        if (groupKeys.isEmpty) {
-                          return const SizedBox();
-                        }
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      // HEADER
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+                        child: Row(
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Text(
-                                group.groupName,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            // TITULOS
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'GTLocks',
+                                    style: TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 6),
+
+                                  Text(
+                                    'Centro de administración',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
 
-                            ...groupKeys.map((key) {
-                              return ListTile(
-                                title: Text(key.lockAlias),
-                                subtitle: Text(
-                                  ' ID ${key.lockId} || Batería ${key.electricQuantity}%',
+                            // BOTON CREAR GRUPO
+                            GestureDetector(
+                              onTap: showCreateGroupDialog,
+                              child: Container(
+                                width: 58,
+                                height: 58,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primary.withOpacity(
+                                        0.25,
+                                      ),
+                                      blurRadius: 18,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
                                 ),
-                                trailing: const Icon(Icons.edit),
-                                onTap: () {
-                                  showMoveLockDialog(key);
-                                },
+                                child: const Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // LISTA
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.only(bottom: 30),
+                          children: [
+                            // SIN GRUPO
+                            if (getUngroupedKeys().isNotEmpty) ...[
+                              const Padding(
+                                padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
+                                child: Text(
+                                  "Sin grupo",
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+
+                              BuildLocksGrid(getUngroupedKeys()),
+                            ],
+
+                            // GRUPOS
+                            ...groups.map((group) {
+                              final groupKeys = getKeysByGroup(group.groupId);
+
+                              if (groupKeys.isEmpty) {
+                                return const SizedBox();
+                              }
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      20,
+                                      24,
+                                      20,
+                                      10,
+                                    ),
+                                    child: Text(
+                                      group.groupName,
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+
+                                  BuildLocksGrid(groupKeys),
+                                ],
                               );
                             }),
                           ],
-                        );
-                      }),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
     );
   }
