@@ -36,9 +36,9 @@ class _HomeScreenState extends State<HomeScreen> {
       itemCount: keys.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 2,
-        mainAxisSpacing: 2,
-        childAspectRatio: 0.82,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.19,
       ),
       itemBuilder: (context, index) {
         final key = keys[index];

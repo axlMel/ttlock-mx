@@ -26,44 +26,42 @@ class LockCard extends StatelessWidget {
       onTap: onTap,
 
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(14),
 
         decoration: BoxDecoration(
           color: Colors.white,
-
           borderRadius: BorderRadius.circular(22),
 
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
 
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // HEADER
             Row(
               children: [
                 // ICONO
                 Container(
-                  width: 54,
-                  height: 54,
+                  width: 42,
+                  height: 42,
 
                   decoration: BoxDecoration(
                     color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                   ),
 
                   child: const Icon(
                     Icons.lock_outline,
                     color: Colors.white,
-                    size: 28,
+                    size: 24,
                   ),
                 ),
 
@@ -72,30 +70,32 @@ class LockCard extends StatelessWidget {
                 // BATERÍA
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                    horizontal: 8,
+                    vertical: 4,
                   ),
 
                   decoration: BoxDecoration(
                     color: getBatteryColor().withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(20),
                   ),
 
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.battery_full,
-                        size: 18,
+                        size: 14,
                         color: getBatteryColor(),
                       ),
 
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 2),
 
                       Text(
                         '${keyData.electricQuantity}%',
 
                         style: TextStyle(
                           color: getBatteryColor(),
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -105,20 +105,23 @@ class LockCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 14),
 
             // NOMBRE
             Text(
               keyData.lockAlias,
 
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
 
             // SUBINFO
             Text(
@@ -126,7 +129,7 @@ class LockCard extends StatelessWidget {
 
               style: const TextStyle(
                 color: AppColors.textSecondary,
-                fontSize: 14,
+                fontSize: 11,
               ),
             ),
           ],
