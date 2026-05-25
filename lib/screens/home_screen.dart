@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 1.19,
+        mainAxisExtent: 118,
       ),
       itemBuilder: (context, index) {
         final key = keys[index];

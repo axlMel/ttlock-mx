@@ -2,18 +2,24 @@ import 'package:flutter/material.dart';
 import '../models/ekey.dart';
 import '../theme/app_colors.dart';
 
-class LockCard extends StatelessWidget {
+class LockCard extends StatefulWidget {
   final EKey keyData;
   final VoidCallback onTap;
 
   const LockCard({super.key, required this.keyData, required this.onTap});
+  @override
+  State<LockCard> createState() => _LockCardState();
+}
 
+class _LockCardState extends State<LockCard> {
+  bool isHovering = false;
+  
   Color getBatteryColor() {
-    if (keyData.electricQuantity > 50) {
+    if (widget.keyData.electricQuantity > 50) {
       return Colors.green;
     }
 
-    if (keyData.electricQuantity > 20) {
+    if (widget.keyData.electricQuantity > 20) {
       return Colors.orange;
     }
 
@@ -22,117 +28,111 @@ class LockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
 
-      child: Container(
-        padding: const EdgeInsets.all(14),
+      onEnter: (_) {
+        setState(() {
+          isHovering = true;
+        });
+      },
 
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+      onExit: (_) {
+        setState(() {
+          isHovering = false;
+        });
+      },
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          height: 118,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border:  Border.all(
+              color: isHovering
+              ? AppColors.primary.withOpacity(0.25)
+              : Colors.transparent,
+              width: 1.5,
             ),
-          ],
-        ),
-
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // HEADER
-            Row(
-              children: [
-                // ICONO
-                Container(
-                  width: 42,
-                  height: 42,
-
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-
-                  child: const Icon(
-                    Icons.lock_outline,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-
-                const Spacer(),
-
-                // BATERÍA
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-
-                  decoration: BoxDecoration(
-                    color: getBatteryColor().withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.battery_full,
-                        size: 14,
-                        color: getBatteryColor(),
-                      ),
-
-                      const SizedBox(width: 2),
-
-                      Text(
-                        '${keyData.electricQuantity}%',
-
-                        style: TextStyle(
-                          color: getBatteryColor(),
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 14),
-
-            // NOMBRE
-            Text(
-              keyData.lockAlias,
-
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+            boxShadow: [
+              BoxShadow(
+                color: isHovering
+                ? Colors.black.withOpacity(0.08)
+                : Colors.black.withOpacity(0.04),
+                blurRadius: isHovering ? 18 : 10,
+                offset: const Offset(0, 4),
               ),
-            ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
 
-            const SizedBox(height: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
 
-            // SUBINFO
-            Text(
-              'ID ${keyData.lockId}',
-
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 11,
+                    child: const Icon(
+                      Icons.lock_outline,
+                      color: AppColors.primary,
+                      size: 18,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${widget.keyData.electricQuantity}%',
+                    style: TextStyle(
+                      color: getBatteryColor(),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+              const Spacer(),
+              Text(
+                widget.keyData.lockAlias,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Online',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  )
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
