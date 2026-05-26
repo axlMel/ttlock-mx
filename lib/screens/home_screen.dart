@@ -306,6 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // TITULOS
                             Expanded(
@@ -333,31 +334,61 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
 
-                            // BOTON CREAR GRUPO
-                            GestureDetector(
-                              onTap: showCreateGroupDialog,
-                              child: Container(
-                                width: 58,
-                                height: 58,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.primary.withOpacity(
-                                        0.25,
-                                      ),
-                                      blurRadius: 18,
-                                      offset: const Offset(0, 6),
+                            Column(
+                              children: [
+                                GestureDetector(
+                                  onTap: showCreateGroupDialog,
+                                  child: Container(
+                                    width: 58,
+                                    height: 58,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.primary.withOpacity(
+                                            0.25,
+                                          ),
+                                          blurRadius: 18,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                    child: const Icon(
+                                      Icons.add,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                  ),
                                 ),
-                                child: const Icon(
-                                  Icons.add,
-                                  color: Colors.white,
-                                  size: 28,
+                                const SizedBox(height: 10),
+                                GestureDetector(
+                                  onTap: logout,
+
+                                  child: Container(
+                                    width: 58,
+                                    height: 58,
+
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.05),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+
+                                    child: const Icon(
+                                      Icons.logout_rounded,
+                                      color: Colors.redAccent,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ],
                         ),
