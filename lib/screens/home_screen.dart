@@ -44,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final key = keys[index];
         return LockCard(
           keyData: key,
+          token: token,
           onTap: () {
             showMoveLockDialog(key);
           },
@@ -105,8 +106,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       final isSelected = selectedKeys.contains(key);
                       return CheckboxListTile(
                         value: isSelected,
-                        title: Text(key.lockAlias),
-                        subtitle: Text('Batería ${key.electricQuantity}%'),
+                        title: Text(key.lockInfo.lockAlias),
+                        subtitle: Text(
+                          'Batería ${key.lockState.electricQuantity}%',
+                        ),
                         onChanged: (value) {
                           setModalState(() {
                             if (value == true) {
@@ -163,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           for (final key in selectedKeys) {
                             await GroupService().setLockGroup(
                               token,
-                              key.lockId,
+                              key.lockInfo.lockId,
                               groupId,
                             );
                           }
@@ -198,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Mover ${key.lockAlias}'),
+          title: Text('Mover ${key.lockInfo.lockAlias}'),
           content: StatefulBuilder(
             builder: (context, setModalState) {
               return DropdownButton<int>(
@@ -234,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () async {
                 final success = await GroupService().setLockGroup(
                   token,
-                  key.lockId,
+                  key.lockInfo.lockId,
                   selectedGroupId,
                 );
                 if (!mounted) return;

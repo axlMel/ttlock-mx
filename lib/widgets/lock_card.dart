@@ -5,9 +5,15 @@ import '../screens/lock_management_screen.dart';
 
 class LockCard extends StatefulWidget {
   final EKey keyData;
+  final String token;
   final VoidCallback onTap;
 
-  const LockCard({super.key, required this.keyData, required this.onTap});
+  const LockCard({
+    super.key,
+    required this.keyData,
+    required this.token,
+    required this.onTap,
+  });
 
   @override
   State<LockCard> createState() => _LockCardState();
@@ -17,11 +23,11 @@ class _LockCardState extends State<LockCard> {
   bool isPressed = false;
 
   Color getBatteryColor() {
-    if (widget.keyData.electricQuantity > 50) {
+    if (widget.keyData.lockState.electricQuantity > 50) {
       return Colors.green;
     }
 
-    if (widget.keyData.electricQuantity > 20) {
+    if (widget.keyData.lockState.electricQuantity > 20) {
       return Colors.orange;
     }
 
@@ -60,7 +66,10 @@ class _LockCardState extends State<LockCard> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => LockManagementScreen(keyData: widget.keyData),
+                builder: (_) => LockManagementScreen(
+                  keyData: widget.keyData,
+                  token: widget.token,
+                ),
               ),
             );
           },
@@ -110,7 +119,7 @@ class _LockCardState extends State<LockCard> {
                     const Spacer(),
 
                     Text(
-                      '${widget.keyData.electricQuantity}%',
+                      '${widget.keyData.lockState.electricQuantity}%',
 
                       style: TextStyle(
                         color: getBatteryColor(),
@@ -124,7 +133,7 @@ class _LockCardState extends State<LockCard> {
                 const Spacer(),
 
                 Text(
-                  widget.keyData.lockAlias,
+                  widget.keyData.lockInfo.lockAlias,
 
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

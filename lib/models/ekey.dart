@@ -1,34 +1,35 @@
+import 'lock_info.dart';
+import 'lock_state.dart';
+import 'lock_capabilities.dart';
+
 class EKey {
   final int keyId;
-  final int lockId;
-  final String lockAlias;
-  final String lockData;
-  final int electricQuantity;
   final String userType;
   final int? groupId;
   final String groupName;
+  final LockInfo lockInfo;
+  final LockState lockState;
+  final LockCapabilities capabilities;
 
   EKey({
     required this.keyId,
-    required this.lockId,
-    required this.lockAlias,
-    required this.lockData,
-    required this.electricQuantity,
     required this.userType,
     required this.groupId,
     required this.groupName,
+    required this.lockInfo,
+    required this.lockState,
+    required this.capabilities,
   });
 
   factory EKey.fromJson(Map<String, dynamic> json) {
     return EKey(
       keyId: json['keyId'],
-      lockId: json['lockId'],
-      lockAlias: json['lockAlias'] ?? 'Sin nombre',
-      lockData: json['lockData'],
-      electricQuantity: json['electricQuantity'],
       userType: json['userType'] ?? '',
       groupId: json['groupId'] ?? 0,
       groupName: json['groupName'] ?? '',
+      lockInfo: LockInfo.fromJson(json),
+      lockState: LockState.fromJson(json),
+      capabilities: LockCapabilities.fromJson(json),
     );
   }
 }

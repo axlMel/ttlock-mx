@@ -4,8 +4,13 @@ import '../theme/app_colors.dart';
 
 class LockManagementScreen extends StatefulWidget {
   final EKey keyData;
+  final String token;
 
-  const LockManagementScreen({super.key, required this.keyData});
+  const LockManagementScreen({
+    super.key,
+    required this.keyData,
+    required this.token,
+  });
 
   @override
   State<LockManagementScreen> createState() => _LockManagementScreenState();
@@ -180,7 +185,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                       const SizedBox(width: 6),
 
                                       Text(
-                                        '${widget.keyData.electricQuantity}%',
+                                        '${widget.keyData.lockState.electricQuantity}%',
 
                                         style: const TextStyle(
                                           color: AppColors.primary,
@@ -234,7 +239,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                           const SizedBox(height: 22),
 
                           Text(
-                            widget.keyData.lockAlias,
+                            widget.keyData.lockInfo.lockAlias,
                             textAlign: TextAlign.center,
 
                             style: const TextStyle(
@@ -247,7 +252,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                           const SizedBox(height: 10),
 
                           Text(
-                            'ID ${widget.keyData.lockId}',
+                            'ID ${widget.keyData.lockInfo.lockId}',
 
                             style: const TextStyle(
                               color: AppColors.textSecondary,
