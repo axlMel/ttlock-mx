@@ -28,6 +28,8 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  ttlock_flutter:
+    path: packages/ttlock_flutter
   flutter:
     sdk: flutter
   http: ^0.13.6

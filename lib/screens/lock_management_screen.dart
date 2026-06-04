@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/ekey.dart';
+import '../models/wifi_info.dart';
 import '../theme/app_colors.dart';
+import '../services/wifi_lock_service.dart';
+import 'package:ttlock_flutter/ttlock.dart';
 
 class LockManagementScreen extends StatefulWidget {
   final EKey keyData;
@@ -19,10 +22,72 @@ class LockManagementScreen extends StatefulWidget {
 class _LockManagementScreenState extends State<LockManagementScreen> {
   bool isOnline = true;
   bool isRefreshing = false;
+  WifiInfo? wifiInfo;
+  bool isLoadingWifi = true;
+  bool isUnlocking = false;
 
   String wifiName = 'GT-CEDIS-5G';
   String firmware = 'v2.4.8';
   String lastSync = 'Hace 2 min';
+
+  Future<void> unlockBluetooth() async {
+    setState(() {
+      isUnlocking = true;
+    });
+
+    TTLock.controlLock(
+      widget.keyData.lockInfo.lockData,
+      TTControlAction.unlock,
+      (lockTime, electricQuantity, uniqueId, lockMac) {
+        if (!mounted) return;
+
+        setState(() {
+          isUnlocking = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chapa abierta por Bluetooth')),
+        );
+
+        print('LOCK TIME: $lockTime');
+        print('BATTERY: $electricQuantity');
+        print('MAC: $lockMac');
+      },
+      (errorCode, errorMsg) {
+        if (!mounted) return;
+
+        setState(() {
+          isUnlocking = false;
+        });
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('BT ERROR: $errorMsg')));
+
+        print('ERROR: $errorCode');
+        print('MESSAGE: $errorMsg');
+      },
+    );
+  }
+
+  Future<void> loadWifiInfo() async {
+    final result = await WifiLockService().getWifiDetails(
+      widget.token,
+      widget.keyData.lockInfo.lockId,
+    );
+    if (!mounted) return;
+    setState(() {
+      wifiInfo = result;
+      isLoadingWifi = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    loadWifiInfo();
+  }
 
   Future<void> refreshLockStatus() async {
     setState(() {
@@ -133,7 +198,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                       width: 8,
                                       height: 8,
                                       decoration: BoxDecoration(
-                                        color: isOnline
+                                        color: (wifiInfo?.isOnline ?? false)
                                             ? Colors.green
                                             : Colors.red,
                                         shape: BoxShape.circle,
@@ -143,10 +208,12 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                     const SizedBox(width: 8),
 
                                     Text(
-                                      isOnline ? 'Online' : 'Offline',
+                                      (wifiInfo?.isOnline ?? false)
+                                          ? 'Online'
+                                          : 'Offline',
 
                                       style: TextStyle(
-                                        color: isOnline
+                                        color: (wifiInfo?.isOnline ?? false)
                                             ? Colors.green
                                             : Colors.red,
                                         fontWeight: FontWeight.bold,
@@ -268,9 +335,11 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                               Expanded(
                                 child: buildPrimaryAction(
                                   icon: Icons.lock_open_rounded,
-                                  title: 'Desbloquear',
+                                  title: isUnlocking
+                                      ? 'Abriendo...'
+                                      : 'Desbloquear',
                                   color: Colors.green,
-                                  onTap: () {},
+                                  onTap: isUnlocking ? () {} : unlockBluetooth,
                                 ),
                               ),
 
@@ -279,7 +348,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                               Expanded(
                                 child: buildPrimaryAction(
                                   icon: Icons.wifi_rounded,
-                                  title: wifiName,
+                                  title: wifiInfo?.networkName ?? 'Sin WiFi',
                                   color: AppColors.primary,
                                   onTap: () {},
                                 ),
