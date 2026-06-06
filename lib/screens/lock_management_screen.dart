@@ -31,6 +31,13 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
   String lastSync = 'Hace 2 min';
 
   Future<void> unlockBluetooth() async {
+    print('LOCK DATA => ${widget.keyData.lockInfo.lockData}');
+    print('LOCK MAC => ${widget.keyData.lockInfo.lockMac}');
+
+    TTLock.getBluetoothState((state) {
+      print('BT STATE => $state');
+    });
+
     setState(() {
       isUnlocking = true;
     });
@@ -39,33 +46,11 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
       widget.keyData.lockInfo.lockData,
       TTControlAction.unlock,
       (lockTime, electricQuantity, uniqueId, lockMac) {
-        if (!mounted) return;
-
-        setState(() {
-          isUnlocking = false;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Chapa abierta por Bluetooth')),
-        );
-
-        print('LOCK TIME: $lockTime');
-        print('BATTERY: $electricQuantity');
-        print('MAC: $lockMac');
+        print('SUCCESS');
       },
       (errorCode, errorMsg) {
-        if (!mounted) return;
-
-        setState(() {
-          isUnlocking = false;
-        });
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('BT ERROR: $errorMsg')));
-
-        print('ERROR: $errorCode');
-        print('MESSAGE: $errorMsg');
+        print('ERROR CODE => $errorCode');
+        print('ERROR MSG => $errorMsg');
       },
     );
   }
