@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../models/ekey.dart';
 import '../models/wifi_info.dart';
 import '../theme/app_colors.dart';
+import '../services/bluetooth_lock_service.dart';
 import '../services/wifi_lock_service.dart';
-import 'package:ttlock_flutter/ttlock.dart';
+
+enum LockCommunicationMode { wifi, bluetooth }
 
 class LockManagementScreen extends StatefulWidget {
   final EKey keyData;
@@ -20,40 +22,14 @@ class LockManagementScreen extends StatefulWidget {
 }
 
 class _LockManagementScreenState extends State<LockManagementScreen> {
-  bool isOnline = true;
   bool isRefreshing = false;
   WifiInfo? wifiInfo;
   bool isLoadingWifi = true;
   bool isUnlocking = false;
+  final BluetoothLockService bluetoothService = BluetoothLockService();
 
-  String wifiName = 'GT-CEDIS-5G';
-  String firmware = 'v2.4.8';
   String lastSync = 'Hace 2 min';
-
-  Future<void> unlockBluetooth() async {
-    print('LOCK DATA => ${widget.keyData.lockInfo.lockData}');
-    print('LOCK MAC => ${widget.keyData.lockInfo.lockMac}');
-
-    TTLock.getBluetoothState((state) {
-      print('BT STATE => $state');
-    });
-
-    setState(() {
-      isUnlocking = true;
-    });
-
-    TTLock.controlLock(
-      widget.keyData.lockInfo.lockData,
-      TTControlAction.unlock,
-      (lockTime, electricQuantity, uniqueId, lockMac) {
-        print('SUCCESS');
-      },
-      (errorCode, errorMsg) {
-        print('ERROR CODE => $errorCode');
-        print('ERROR MSG => $errorMsg');
-      },
-    );
-  }
+  LockCommunicationMode selectedMode = LockCommunicationMode.wifi;
 
   Future<void> loadWifiInfo() async {
     final result = await WifiLockService().getWifiDetails(
@@ -92,6 +68,40 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
     ).showSnackBar(const SnackBar(content: Text('Estado actualizado')));
   }
 
+  Future<void> selectBluetoothMode() async {
+    final bluetoothEnabled = await bluetoothService.isBluetoothEnabled();
+    if (!mounted) return;
+    if (!bluetoothEnabled) {
+      await showBluetoothDisabledDialog();
+      return;
+    }
+    setState(() {
+      selectedMode = LockCommunicationMode.bluetooth;
+    });
+  }
+
+  Future<void> showBluetoothDisabledDialog() async {
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Bluetooth apagado'),
+          content: const Text(
+            'Para utilizar este modo active Bluetooth y vuelve a intentarrlo',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Aceptar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,9 +124,73 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                 icon: const Icon(Icons.arrow_back_ios_new),
               ),
 
-              title: const Text(
-                'TTLock',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              title: Row(
+                children: [
+                  Container(
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedMode = LockCommunicationMode.wifi;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: selectedMode == LockCommunicationMode.wifi
+                                  ? AppColors.primary
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Icon(
+                              Icons.wifi_rounded,
+                              size: 20,
+                              color: selectedMode == LockCommunicationMode.wifi
+                                  ? Colors.white
+                                  : Colors.black54,
+                            ),
+                          ),
+                        ),
+
+                        GestureDetector(
+                          onTap: selectBluetoothMode,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  selectedMode ==
+                                      LockCommunicationMode.bluetooth
+                                  ? AppColors.primary
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Icon(
+                              Icons.bluetooth_rounded,
+                              size: 20,
+                              color:
+                                  selectedMode ==
+                                      LockCommunicationMode.bluetooth
+                                  ? Colors.white
+                                  : Colors.black54,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
 
               actions: [
@@ -164,12 +238,12 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
+                                  horizontal: 10,
                                   vertical: 6,
                                 ),
 
                                 decoration: BoxDecoration(
-                                  color: isOnline
+                                  color: (wifiInfo?.isOnline ?? false)
                                       ? Colors.green.withOpacity(0.10)
                                       : Colors.red.withOpacity(0.10),
 
@@ -215,7 +289,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
 
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
+                                    horizontal: 10,
                                     vertical: 6,
                                   ),
 
@@ -251,44 +325,58 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                             ],
                           ),
 
-                          const SizedBox(height: 26),
+                          const SizedBox(height: 18),
 
                           // ICONO LOCK
-                          Container(
-                            width: 130,
-                            height: 130,
-
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-
-                              gradient: RadialGradient(
-                                colors: [
-                                  AppColors.primary.withOpacity(0.25),
-                                  AppColors.primary.withOpacity(0.02),
+                          GestureDetector(
+                            onTap: () {},
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 140,
+                                  height: 140,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        AppColors.primary.withOpacity(0.25),
+                                        AppColors.primary.withOpacity(0.02),
+                                      ],
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: isUnlocking
+                                        ? const CircularProgressIndicator()
+                                        : Container(
+                                            width: 96,
+                                            height: 96,
+                                            decoration: const BoxDecoration(
+                                              color: AppColors.primary,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.lock_outline,
+                                              color: Colors.white,
+                                              size: 48,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                                if (isUnlocking) ...[
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'Desbloqueando...',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
                                 ],
-                              ),
-                            ),
-
-                            child: Center(
-                              child: Container(
-                                width: 82,
-                                height: 82,
-
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-
-                                child: const Icon(
-                                  Icons.lock_outline,
-                                  color: Colors.white,
-                                  size: 42,
-                                ),
-                              ),
+                              ],
                             ),
                           ),
 
-                          const SizedBox(height: 22),
+                          const SizedBox(height: 16),
 
                           Text(
                             widget.keyData.lockInfo.lockAlias,
@@ -301,61 +389,65 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                             ),
                           ),
 
-                          const SizedBox(height: 10),
-
-                          Text(
-                            'ID ${widget.keyData.lockInfo.lockId}',
-
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 14,
-                            ),
-                          ),
-
                           const SizedBox(height: 28),
 
                           // BOTONES RAPIDOS
-                          Row(
-                            children: [
-                              Expanded(
-                                child: buildPrimaryAction(
-                                  icon: Icons.lock_open_rounded,
-                                  title: isUnlocking
-                                      ? 'Abriendo...'
-                                      : 'Desbloquear',
-                                  color: Colors.green,
-                                  onTap: isUnlocking ? () {} : unlockBluetooth,
-                                ),
-                              ),
-
-                              const SizedBox(width: 12),
-
-                              Expanded(
-                                child: buildPrimaryAction(
-                                  icon: Icons.wifi_rounded,
-                                  title: wifiInfo?.networkName ?? 'Sin WiFi',
-                                  color: AppColors.primary,
-                                  onTap: () {},
-                                ),
-                              ),
-                            ],
-                          ),
-
                           const SizedBox(height: 18),
 
                           // INFO
-                          buildInfoRow(
-                            icon: Icons.sync,
-                            title: 'Última sincronización',
-                            value: lastSync,
-                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.06),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.sync_rounded,
+                                  size: 18,
+                                  color: AppColors.textSecondary,
+                                ),
 
-                          const SizedBox(height: 12),
+                                const SizedBox(width: 6),
 
-                          buildInfoRow(
-                            icon: Icons.memory_rounded,
-                            title: 'Firmware',
-                            value: firmware,
+                                Text(
+                                  lastSync,
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+
+                                const Spacer(),
+
+                                const Icon(
+                                  Icons.wifi_rounded,
+                                  size: 18,
+                                  color: AppColors.primary,
+                                ),
+
+                                const SizedBox(width: 6),
+
+                                Expanded(
+                                  child: Text(
+                                    wifiInfo?.networkName ?? 'Sin WiFi',
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.right,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(width: 8),
+
+                                const Icon(Icons.settings_rounded, size: 18),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -417,20 +509,6 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                             ),
 
                             buildFeatureCard(
-                              icon: Icons.wifi,
-                              title: 'WiFi',
-                              subtitle: 'Red',
-                              onTap: () {},
-                            ),
-
-                            buildFeatureCard(
-                              icon: Icons.bluetooth,
-                              title: 'Bluetooth',
-                              subtitle: 'Conexión',
-                              onTap: () {},
-                            ),
-
-                            buildFeatureCard(
                               icon: Icons.people_alt_rounded,
                               title: 'Usuarios',
                               subtitle: 'Permisos',
@@ -449,44 +527,6 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                     ),
                   ],
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildPrimaryAction({
-    required IconData icon,
-    required String title,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: onTap,
-
-      child: Container(
-        padding: const EdgeInsets.all(14),
-
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(18),
-        ),
-
-        child: Row(
-          children: [
-            Icon(icon, color: color),
-
-            const SizedBox(width: 10),
-
-            Expanded(
-              child: Text(
-                title,
-                overflow: TextOverflow.ellipsis,
-
-                style: TextStyle(color: color, fontWeight: FontWeight.bold),
               ),
             ),
           ],
