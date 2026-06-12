@@ -14,4 +14,12 @@ class BluetoothLockService {
     final state = await getBluetoothState();
     return state == TTBluetoothState.turnOn;
   }
+
+  Future<void> unlock({
+    required String lockData,
+    required TTControlLockCallback onSuccess,
+    required TTFailedCallback onError,
+  }) async {
+    TTLock.controlLock(lockData, TTControlAction.unlock, onSuccess, onError);
+  }
 }

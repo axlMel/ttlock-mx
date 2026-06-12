@@ -27,6 +27,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
   bool isLoadingWifi = true;
   bool isUnlocking = false;
   final BluetoothLockService bluetoothService = BluetoothLockService();
+  final WifiLockService wifiService = WifiLockService();
 
   String lastSync = 'Hace 2 min';
   LockCommunicationMode selectedMode = LockCommunicationMode.wifi;
@@ -100,6 +101,75 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
         );
       },
     );
+  }
+
+  Future<void> unlockBluetooth() async {
+    setState(() {
+      isUnlocking = true;
+    });
+    await bluetoothService.unlock(
+      lockData: widget.keyData.lockInfo.lockData,
+      onSuccess: (lockTime, electricQuantity, uniqueId, lockData) {
+        if (!mounted) return;
+        setState(() {
+          isUnlocking = false;
+        });
+        print('SUCCESS');
+        print('LOCK TIME => $lockTime');
+        print('BATTERY => $electricQuantity');
+        print('UNIQUE ID => $uniqueId');
+        print('LOCK DATA => $lockData');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chapa abierta por Bluetooth')),
+        );
+      },
+      onError: (errorCode, errorMsg) {
+        if (!mounted) return;
+        setState(() {
+          isUnlocking = false;
+        });
+        print('Error code = $errorCode');
+        print('Error msg = $errorMsg');
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMsg)));
+      },
+    );
+  }
+
+  Future<void> unlockSelectedMode() async {
+    if (selectedMode == LockCommunicationMode.bluetooth) {
+      await unlockBluetooth();
+      return;
+    }
+    await unlockWifi();
+  }
+
+  Future<void> unlockWifi() async {
+    setState(() {
+      isUnlocking = true;
+    });
+    try {
+      await WifiLockService().unlock(
+        widget.token,
+        widget.keyData.lockInfo.lockId,
+      );
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Chapa abierta por Wifi')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error Wifi: $e')));
+    } finally {
+      setState(() {
+        isUnlocking = false;
+      });
+    }
   }
 
   @override
@@ -329,7 +399,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
 
                           // ICONO LOCK
                           GestureDetector(
-                            onTap: () {},
+                            onTap: isUnlocking ? null : unlockSelectedMode,
                             child: Column(
                               children: [
                                 Container(

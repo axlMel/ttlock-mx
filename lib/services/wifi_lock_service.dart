@@ -1,5 +1,7 @@
 import "dart:convert";
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:ttlock_flutter/ttlock.dart';
 import '../models/wifi_info.dart';
 
 class WifiLockService {
@@ -40,5 +42,41 @@ class WifiLockService {
       await Future.delayed(const Duration(seconds: 2));
     }
     return null;
+  }
+
+  Future<void> unlock(String token, int lockId) async {
+    final url = Uri.parse('$baseUrl/v3/lock/unlock');
+    final date = DateTime.now().millisecondsSinceEpoch;
+    print('OBTENIENDO WIFI INFO');
+    print('LOCK ID: $lockId');
+    for (var i = 0; i < 6; i++) {
+      try {
+        final response = await http
+            .post(
+              url,
+              body: {
+                'clientId': clientId,
+                'accessToken': token,
+                'lockId': lockId.toString(),
+                'date': date.toString(),
+              },
+            )
+            .timeout(const Duration(seconds: 30));
+        print('UNLOCK STATUS: ${response.statusCode}');
+        print('UNLOCK BODY: ${response.body}');
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          if (data['errcode'] != 0) {
+            throw Exception(data['errmsg']);
+          }
+          return;
+        }
+        throw Exception('HTTP ${response.statusCode}');
+      } catch (e) {
+        print('Intento wifi ${i + 1} fallo: $e');
+      }
+      await Future.delayed(const Duration(seconds: 2));
+    }
+    return;
   }
 }
