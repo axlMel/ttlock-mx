@@ -1,7 +1,6 @@
 import "dart:convert";
-import 'package:flutter/material.dart';
+import 'dart:ffi';
 import 'package:http/http.dart' as http;
-import 'package:ttlock_flutter/ttlock.dart';
 import '../models/wifi_info.dart';
 
 class WifiLockService {
@@ -78,5 +77,51 @@ class WifiLockService {
       await Future.delayed(const Duration(seconds: 2));
     }
     return;
+  }
+
+  Future<bool> getRandomPasscode(
+    String token,
+    int lockId,
+    int keyboardPwdType,
+    String keyboardPwdName,
+    Long startDate,
+    Long endDate,
+  ) async {
+    final url = Uri.parse('$baseUrl/v3/keyboardPwd/get');
+    final date = DateTime.now().millisecondsSinceEpoch;
+    print('OBTENIENDO CONTRASEÑA ALEATORIA');
+    print('LOCK ID: $lockId');
+    for (var i = 0; i < 6; i++) {
+      try {
+        final response = await http
+            .post(
+              url,
+              body: {
+                'clientId': clientId,
+                'accessToken': token,
+                'lockId': lockId.toString(),
+                'keyboardPwdType': keyboardPwdType,
+                'keyboardPwdName': keyboardPwdName,
+                'startDate': startDate,
+                'endDate': endDate,
+                'date': date.toString(),
+              },
+            )
+            .timeout(const Duration(seconds: 30));
+        print('UNLOCK STATUS: ${response.statusCode}');
+        print('UNLOCK BODY: ${response.body}');
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          return data['keyboardPwd'];
+        } else {
+          final data = jsonDecode(response.body);
+          return data['errmsg'];
+        }
+      } catch (e) {
+        print('Intento wifi ${i + 1} fallo: $e');
+      }
+      await Future.delayed(const Duration(seconds: 2));
+    }
+    return true;
   }
 }
