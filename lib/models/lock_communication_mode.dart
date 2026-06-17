@@ -1,0 +1,1 @@
+enum LockCommunicationMode { wifi, bluetooth }

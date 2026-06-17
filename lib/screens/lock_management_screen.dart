@@ -4,8 +4,8 @@ import '../models/wifi_info.dart';
 import '../theme/app_colors.dart';
 import '../services/bluetooth_lock_service.dart';
 import '../services/wifi_lock_service.dart';
-
-enum LockCommunicationMode { wifi, bluetooth }
+import 'package:api_app/screens/passcodes_screen.dart';
+import '../models/lock_communication_mode.dart';
 
 class LockManagementScreen extends StatefulWidget {
   final EKey keyData;
@@ -561,7 +561,20 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                               icon: Icons.credit_card,
                               title: 'Tarjetas',
                               subtitle: 'IC Cards',
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PasscodesScreen(
+                                      lockId: widget.keyData.lockInfo.lockId,
+                                      token: widget.token,
+                                      lockData:
+                                          widget.keyData.lockInfo.lockData,
+                                      communicationMode: selectedMode,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
 
                             buildFeatureCard(
