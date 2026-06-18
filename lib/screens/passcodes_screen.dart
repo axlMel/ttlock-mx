@@ -1,3 +1,4 @@
+import 'package:api_app/screens/new_passcode_screen.dart';
 import 'package:api_app/services/passcodes/wifi_passcode_service.dart';
 import 'package:flutter/material.dart';
 import '../models/lock_communication_mode.dart';
@@ -22,7 +23,7 @@ class PasscodesScreen extends StatefulWidget {
 class _PasscodesScreen extends State<PasscodesScreen> {
   final WifiPasscodeService wifiService = WifiPasscodeService();
   List<Passcode> passcodes = [];
-  bool isloading = true;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -37,8 +38,9 @@ class _PasscodesScreen extends State<PasscodesScreen> {
         widget.lockId,
       );
     }
+    if (!mounted) return;
     setState(() {
-      isloading = false;
+      isLoading = false;
     });
   }
 
@@ -46,18 +48,89 @@ class _PasscodesScreen extends State<PasscodesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Codigos de Acceso')),
-      body: isloading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: passcodes.length,
-              itemBuilder: (context, index) {
-                final passcode = passcodes[index];
-                return ListTile(
-                  title: Text(passcode.keyboardPwdName),
-                  subtitle: Text(passcode.keyboardPwd),
-                );
-              },
+      floatingActionButton: FloatingActionButton(
+        onPressed: (){
+        //Navegar a NewPasscodeScreen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => NewPasscodeScreen(
+              lockId: widget.lockId, 
+              token: widget.token, 
+              lockData: widget.lockData, 
+              communicationMode: widget.communicationMode
+            )
+          )
+        );
+      },
+      child: const Icon(Icons.add)),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : passcodes.isEmpty 
+          ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.pin_outlined,
+                  size: 70,
+                  color: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No existen códigos aún',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Presiona + para generar uno',
+                  style: TextStyle(
+                    color: Colors.grey,
+                  ),
+                )
+              ],
             ),
+          )
+        : ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: passcodes.length,
+          itemBuilder: (context, index) {
+            final passcode = passcodes[index];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(16),
+                leading: CircleAvatar(
+                  child: Icon(Icons.password),
+                ),
+                title: Text(
+                  passcode.keyboardPwdName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(passcode.keyboardPwd),
+                ),
+                trailing: const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 18,
+                ),
+                onTap: () {
+                  //Abrir detalles
+                },
+              ),
+            );
+          },
+        ),
     );
   }
 }

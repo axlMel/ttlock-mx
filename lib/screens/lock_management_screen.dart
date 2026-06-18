@@ -554,15 +554,8 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                               icon: Icons.pin,
                               title: 'PIN',
                               subtitle: 'Contraseñas',
-                              onTap: () {},
-                            ),
-
-                            buildFeatureCard(
-                              icon: Icons.credit_card,
-                              title: 'Tarjetas',
-                              subtitle: 'IC Cards',
                               onTap: () {
-                                Navigator.push(
+                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => PasscodesScreen(
@@ -574,6 +567,14 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                     ),
                                   ),
                                 );
+                              },
+                            ),
+
+                            buildFeatureCard(
+                              icon: Icons.credit_card,
+                              title: 'Tarjetas',
+                              subtitle: 'IC Cards',
+                              onTap: () {
                               },
                             ),
 

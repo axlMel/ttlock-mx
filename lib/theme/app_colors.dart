@@ -7,4 +7,6 @@ class AppColors {
   static const cardBackground = Colors.white;
   static const textPrimary = Color(0xFF1A1A1A);
   static const textSecondary = Colors.blueGrey;
+  static const blurWhite = Color.fromARGB(255, 202, 200, 207);
+  static const blurPrimary = Color.fromARGB(255, 37, 23, 100);
 }
