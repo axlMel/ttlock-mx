@@ -1,11 +1,12 @@
+import 'package:api_app/models/passcodes_form_data.dart';
 class Passcode {
   final int keyboardPwdId;
   final int lockId;
-  final String keyboardPwd;
-  final String keyboardPwdName;
+  String keyboardPwd;
+  String keyboardPwdName;
   final int keyboardPwdType;
-  final int startDate;
-  final int endDate;
+  int startDate;
+  int endDate;
   final int sendDate;
   final int isCustom;
   final String senderUsername;
@@ -37,4 +38,56 @@ class Passcode {
       senderUsername: json['senderUsername'] ?? '',
     );
   }
+
+  DateTime get startDateTime {
+    return DateTime.fromMillisecondsSinceEpoch(
+      startDate,
+    );
+  }
+
+  DateTime? get endDateTime {
+
+    if(endDate==0){
+      return null;
+    }
+
+    return DateTime.fromMillisecondsSinceEpoch(
+      endDate,
+    );
+  }
+
+  String get typeName {
+    return PasscodesFormData.typeNames[
+      keyboardPwdType
+    ] ?? 'Desconocido';
+  }
+
+  String get formattedStartDate {
+
+    final date=startDateTime;
+
+    return
+      '${date.day}/'
+      '${date.month}/'
+      '${date.year}'
+      ' ${date.hour.toString().padLeft(2,'0')}:'
+      '${date.minute.toString().padLeft(2,'0')}';
+  }
+
+  String get formattedEndDate {
+
+    if(endDateTime==null){
+      return 'Sin fecha límite';
+    }
+
+    final date=endDateTime!;
+
+    return
+      '${date.day}/'
+      '${date.month}/'
+      '${date.year}'
+      ' ${date.hour.toString().padLeft(2,'0')}:'
+      '${date.minute.toString().padLeft(2,'0')}';
+  }
+
 }

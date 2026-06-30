@@ -2,8 +2,8 @@ import 'package:api_app/models/passcodes_form_data.dart';
 import 'package:api_app/services/passcodes/wifi_passcode_service.dart';
 import 'package:flutter/material.dart';
 import 'package:api_app/models/lock_communication_mode.dart';
-import 'package:api_app/services/passcodes/wifi_passcode_service.dart';
 import 'package:api_app/models/passcode_creation_result.dart';
+import 'package:api_app/screens/passcodes/created_passcode_screen.dart';
 
 class NewPasscodeScreen extends StatefulWidget {
   final int lockId;
@@ -108,7 +108,7 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
             ),
             const SizedBox(height: 15),
             DropdownButtonFormField<int>(
-              value: availableTypes.contains(formData.type) ? formData.type : availableTypes.first,
+              initialValue: availableTypes.contains(formData.type) ? formData.type : availableTypes.first,
               decoration: const InputDecoration(
                 labelText: 'Tipo',
                 border: OutlineInputBorder(),
@@ -125,7 +125,7 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
                 if(value == null) return;
                 if (!mounted) return;
                 setState(() {
-                  formData.type = value!;
+                  formData.type = value;
                 });
               },
             ),
@@ -256,7 +256,6 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
     }
   }
    
-
   Future<void> selectStartDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -311,7 +310,6 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
       );
     });
   }
-
   Future<void> selectEndTime() async {
     final picked = await showTimePicker(
       context: context,
@@ -365,13 +363,12 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
         );
       }
       if(!mounted) return;
-      Navigator.pop(context);
+      Navigator.of(context, rootNavigator: true).pop();
       if (result==null) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No fue posible generar el código')));
         return;
       }
-      print(result.keyboardPwd);
-      print(result.keyboardPwdId);
+      Navigator.push(context, MaterialPageRoute(builder: (_) => CreatedPasscodeScreen(result: result!)));
       
     } catch (e) {
       if(!mounted) return;

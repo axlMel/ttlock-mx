@@ -4,7 +4,7 @@ import '../models/wifi_info.dart';
 import '../theme/app_colors.dart';
 import '../services/bluetooth_lock_service.dart';
 import '../services/wifi_lock_service.dart';
-import 'package:api_app/screens/passcodes_screen.dart';
+import 'package:api_app/screens/passcodes/passcodes_screen.dart';
 import '../models/lock_communication_mode.dart';
 
 class LockManagementScreen extends StatefulWidget {
@@ -561,9 +561,9 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                     builder: (_) => PasscodesScreen(
                                       lockId: widget.keyData.lockInfo.lockId,
                                       token: widget.token,
-                                      lockData:
-                                          widget.keyData.lockInfo.lockData,
+                                      lockData: widget.keyData.lockInfo.lockData,
                                       communicationMode: selectedMode,
+                                      lockAlias: widget.keyData.lockInfo.lockAlias,
                                     ),
                                   ),
                                 );

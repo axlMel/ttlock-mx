@@ -1,13 +1,15 @@
-import 'package:api_app/screens/new_passcode_screen.dart';
+import 'package:api_app/screens/passcodes/new_passcode_screen.dart';
 import 'package:api_app/services/passcodes/wifi_passcode_service.dart';
 import 'package:flutter/material.dart';
-import '../models/lock_communication_mode.dart';
+import '../../models/lock_communication_mode.dart';
 import 'package:api_app/models/passcode.dart';
+import 'package:api_app/screens/passcodes/passcode_detail_screen.dart';
 
 class PasscodesScreen extends StatefulWidget {
   final int lockId;
   final String token;
   final String lockData;
+  final String lockAlias;
   final LockCommunicationMode communicationMode;
   const PasscodesScreen({
     super.key,
@@ -15,6 +17,7 @@ class PasscodesScreen extends StatefulWidget {
     required this.token,
     required this.lockData,
     required this.communicationMode,
+    required this.lockAlias
   });
   @override
   State<PasscodesScreen> createState() => _PasscodesScreen();
@@ -49,9 +52,9 @@ class _PasscodesScreen extends State<PasscodesScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('Codigos de Acceso')),
       floatingActionButton: FloatingActionButton(
-        onPressed: (){
+        onPressed: () async {
         //Navegar a NewPasscodeScreen
-        Navigator.push(
+        final refresh = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => NewPasscodeScreen(
@@ -62,6 +65,9 @@ class _PasscodesScreen extends State<PasscodesScreen> {
             )
           )
         );
+        if (refresh == true) {
+          loadPasscodes();
+        }
       },
       child: const Icon(Icons.add)),
       body: isLoading
@@ -124,8 +130,22 @@ class _PasscodesScreen extends State<PasscodesScreen> {
                   Icons.arrow_forward_ios,
                   size: 18,
                 ),
-                onTap: () {
+                onTap: () async {
                   //Abrir detalles
+                  final refresh = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PasscodeDetailScreen(
+                        passcode: passcode,
+                        token: widget.token,
+                        lockId: widget.lockId,
+                        lockAlias: widget.lockAlias,
+                      ),
+                    ),
+                  );
+                  if(refresh==true){
+                    loadPasscodes();
+                  }
                 },
               ),
             );

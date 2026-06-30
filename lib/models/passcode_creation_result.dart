@@ -1,8 +1,8 @@
 class PasscodeCreationResult {
   final int keyboardPwdId;
-  final String? keyboardPwd;
+  final String keyboardPwd;
 
-  PasscodeCreationResult({required this.keyboardPwdId, this.keyboardPwd});
+  PasscodeCreationResult({required this.keyboardPwdId, required this.keyboardPwd});
 
   factory PasscodeCreationResult.fromJson(Map<String, dynamic> json) {
     return PasscodeCreationResult(
