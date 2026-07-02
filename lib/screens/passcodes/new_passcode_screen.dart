@@ -1,5 +1,6 @@
 import 'package:api_app/models/passcodes_form_data.dart';
 import 'package:api_app/services/passcodes/wifi_passcode_service.dart';
+import 'package:api_app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:api_app/models/lock_communication_mode.dart';
 import 'package:api_app/models/passcode_creation_result.dart';
@@ -47,16 +48,39 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         title: const Text('Nuevo código'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 10),
             SegmentedButton(
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith((states){
+                  if (states.contains(WidgetState.selected)) {
+                    return AppColors.primary;
+                  }
+                  return Colors.white;
+                }),
+                foregroundColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return Colors.white;
+                  }
+                  return Colors.black87;
+                }),
+                shape: WidgetStatePropertyAll(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)
+                  )
+                )
+              ),
               segments: const [
                 ButtonSegment(
                   value: false,
@@ -90,10 +114,7 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
                 formData.customCode = value;
               },
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Código',
-                border: OutlineInputBorder(),
-              ),
+              decoration: buildInput('Código')
             ),
             if (formData.isCustom) const SizedBox(height: 15),
             TextField(
@@ -101,17 +122,27 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
               onChanged: (value) {
                 formData.name = value;
               },
-              decoration: const InputDecoration(
-                labelText: 'Nombre',
-                border: OutlineInputBorder(),
-              ),
+              decoration: buildInput('Nombre')
             ),
             const SizedBox(height: 15),
             DropdownButtonFormField<int>(
+              dropdownColor: Colors.white,
               initialValue: availableTypes.contains(formData.type) ? formData.type : availableTypes.first,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Tipo',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.primary,
+                    width:1.5,
+                  ),
+                ),
+                filled:true,
+                fillColor: Colors.white,
+                
               ),
               items: availableTypes.map((type){
                 return DropdownMenuItem<int>(
@@ -141,6 +172,18 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(
+                        color: AppColors.primary,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical:16,
+                      ),
+                    ),
                     icon: const Icon(Icons.calendar_today),
                     label: Text(
                       '${formData.startDate.day}/'
@@ -153,6 +196,18 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
                 const SizedBox(width:10),
                 Expanded(
                   child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(
+                        color: AppColors.primary,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical:16,
+                      ),
+                    ),
                     icon: const Icon(Icons.schedule),
                     label: Text(
                       '${formData.startDate.hour}:'
@@ -166,7 +221,7 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
             const SizedBox(height:20),
             if(showEndDateFields())
             Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Text(
                   'Fin',
@@ -179,6 +234,18 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: BorderSide(
+                            color: AppColors.primary,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical:16,
+                          ),
+                        ),
                         icon: const Icon(Icons.calendar_month),
                         label: Text(
                           '${formData.endDate!.day}/'
@@ -191,6 +258,18 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
                     const SizedBox(width:10),
                     Expanded(
                       child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: BorderSide(
+                            color: AppColors.primary,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical:16,
+                          ),
+                        ),
                         icon: const Icon(Icons.schedule),
                         label: Text(
                           '${formData.endDate!.hour}:'
@@ -211,12 +290,19 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
               width: double.infinity,
               height: 55,
               child:  ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)
+                  )
+                ),
                 icon: const Icon(Icons.lock_open),
                 label: const Text("Crear código", 
                 style: TextStyle(
-                  fontSize: 16
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold
                 ),),
-                
                 onPressed: createPasscode, 
               ),
             )
@@ -227,6 +313,12 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
   }
   Widget buildInfoMessage() {
     return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      elevation: 2,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
@@ -375,5 +467,33 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
+  }
+
+  InputDecoration buildInput(String label){
+    return InputDecoration(
+      labelText: label,
+
+      filled:true,
+      fillColor: Colors.white,
+
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+
+        borderSide: BorderSide.none,
+      ),
+
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+
+        borderSide: BorderSide(
+          color: AppColors.primary,
+          width:1.5,
+        ),
+      ),
+    );
   }
 }

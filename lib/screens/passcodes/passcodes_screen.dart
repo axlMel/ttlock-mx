@@ -66,11 +66,74 @@ class _PasscodesScreen extends State<PasscodesScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Códigos de acceso'),
         backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+          ),
+        ),
+
+        actions: [
+
+          IconButton(
+            onPressed: () {
+
+              //aquí luego conectaremos Restaurar
+            },
+            icon: const Icon(
+              Icons.restore,
+            ),
+          ),
+
+          const SizedBox(width: 8),
+        ],
+
+        titleSpacing: 0,
+
+        title: Container(
+          height: 42,
+
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.grey.shade300,
+            ),
+          ),
+
+          child: TextField(
+            onChanged: (value) {
+              setState(() {
+                searchText=value.toLowerCase();
+              });
+            },
+
+            decoration: InputDecoration(
+              hintText:'Buscar código...',
+              hintStyle: TextStyle(
+                color: Colors.grey.shade500,
+              ),
+
+              prefixIcon: Icon(
+                Icons.search,
+                color: Colors.grey.shade600,
+              ),
+
+              border: InputBorder.none,
+
+              contentPadding:
+                  const EdgeInsets.symmetric(
+                    vertical:10,
+                  ),
+            ),
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
@@ -121,50 +184,6 @@ class _PasscodesScreen extends State<PasscodesScreen> {
             )
           : Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-
-                  child: TextField(
-                    onChanged: (value) {
-                      setState(() {
-                        searchText = value;
-                      });
-                    },
-
-                    decoration: InputDecoration(
-                      hintText: 'Buscar código',
-
-                      prefixIcon: const Icon(Icons.search),
-
-                      filled: true,
-
-                      fillColor: Colors.grey.shade100,
-
-                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
-
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-
-                        borderSide: BorderSide.none,
-                      ),
-
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-
-                        borderSide: BorderSide.none,
-                      ),
-
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-
-                        borderSide: BorderSide(
-                          color: AppColors.primary,
-                          width: 1.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
@@ -172,11 +191,11 @@ class _PasscodesScreen extends State<PasscodesScreen> {
                     itemBuilder: (context, index) {
                       final passcode = filteredPasscodes[index];
                       return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
+                        margin: const EdgeInsets.only(bottom: 8),
                         elevation: 2,
                         color: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                         child: Material(
                           color: Colors.transparent,
@@ -199,57 +218,69 @@ class _PasscodesScreen extends State<PasscodesScreen> {
                               }
                             },
                             child: ListTile(
-                              contentPadding: const EdgeInsets.all(16),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 4,
+                              ),
+
                               leading: CircleAvatar(
+                                radius: 24,
                                 backgroundColor: AppColors.primary,
+
                                 child: const Icon(
                                   Icons.password,
                                   color: Colors.white,
                                 ),
                               ),
+
                               title: Text(
                                 passcode.keyboardPwdName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 17,
                                 ),
                               ),
+
                               subtitle: Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                padding: const EdgeInsets.only(
+                                  top: 6,
+                                ),
+
+                                child: Row(
                                   children: [
-                                    Text(passcode.formattedStartDate),
-                                    const SizedBox(height: 4),
+
                                     Text(
-                                      passcode.typeName,
+                                      passcode.formattedStartDate,
                                       style: TextStyle(
-                                        color: Colors.grey.shade600,
+                                        color: Colors.grey.shade700,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+
+                                    const SizedBox(width:12),
+
+                                    Expanded(
+                                      child: Text(
+                                        passcode.typeName,
+                                        overflow: TextOverflow.ellipsis,
+
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontSize:13,
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
+
                               trailing: const Icon(
                                 Icons.arrow_forward_ios,
-                                size: 18,
+                                size:18,
                               ),
-                              onTap: () async {
-                                //Abrir detalles
-                                final refresh = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => PasscodeDetailScreen(
-                                      passcode: passcode,
-                                      token: widget.token,
-                                      lockId: widget.lockId,
-                                      lockAlias: widget.lockAlias,
-                                    ),
-                                  ),
-                                );
-                                if (refresh == true) {
-                                  loadPasscodes();
-                                }
-                              },
                             ),
                           ),
                         ),
