@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
-
+import 'package:api_app/models/passcode_creation_result.dart';
+import 'package:api_app/models/passcode.dart';
+import 'package:api_app/models/passcodes_form_data.dart';
 import 'package:api_app/models/passcode_creation_result.dart';
 
 class CreatedPasscodeScreen extends StatelessWidget {
   final PasscodeCreationResult result;
+  final DateTime startDate;
+  final DateTime? endDate;
+  final String lockAlias;
+  final int passcodeType;
 
   const CreatedPasscodeScreen({
     super.key,
-    required this.result,
+    required this.result, required this.startDate, this.endDate, required this.lockAlias, required this.passcodeType,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Código generado'),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -25,7 +28,7 @@ class CreatedPasscodeScreen extends StatelessWidget {
           child: Column(
             children: [
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 80),
 
               const Icon(
                 Icons.lock_open,
@@ -117,9 +120,7 @@ class CreatedPasscodeScreen extends StatelessWidget {
                       ),
                       onPressed: () {
 
-                        Share.share(
-                          'Tu código de acceso es: ${result.keyboardPwd}',
-                        );
+                        Share.share(buildShareMessage());
 
                       },
                     ),
@@ -156,5 +157,37 @@ class CreatedPasscodeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String buildShareMessage() {
+    final hasEndDate =
+        passcodeType != 1 &&
+        passcodeType != 2;
+    return [
+      'Muy buen día,',
+
+      'Has recibido el siguiente código de acceso de tipo '
+      '${PasscodesFormData.typeNames[passcodeType]?.toLowerCase()}:',
+      '',
+      result.keyboardPwd,
+      '',
+      'Válido desde:',
+      formatDateTime(startDate),
+      'Hasta:',
+      hasEndDate
+          ? formatDateTime(endDate!)
+          : '-',
+      'Puedes aperturar la bóveda del vehículo económico:',
+      lockAlias,
+      'Saludos.',
+    ].join('\n');
+  }
+
+  String formatDateTime(DateTime date) {
+    return '${date.day}/'
+        '${date.month}/'
+        '${date.year} '
+        '${date.hour.toString().padLeft(2,'0')}:'
+        '${date.minute.toString().padLeft(2,'0')}';
   }
 }

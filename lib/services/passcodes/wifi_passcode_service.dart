@@ -1,3 +1,4 @@
+import 'dart:async';
 import "dart:convert";
 import 'package:http/http.dart' as http;
 import 'package:api_app/models/passcode.dart';
@@ -79,7 +80,7 @@ class WifiPasscodeService {
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           if (data['errcode'] != null && data['errcode'] != 0) {
-            throw Exception(data['errmsg']);
+            throw Exception('${data['errms']}');
           }
           return PasscodeCreationResult.fromJson(data);
         }
@@ -221,18 +222,26 @@ class WifiPasscodeService {
             .timeout(const Duration(seconds: 30));
         print('CHANGE PASSCODE STATUS: ${response.statusCode}');
         print('CHANGE PASSCODE BODY: ${response.body}');
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          if (data['errcode'] != 0) {
-            throw Exception(data['errmsg']);
-          }
-          return;
+        if (response.statusCode != 200) {
+          throw Exception('HTTP ${response.statusCode}');
         }
-        throw Exception('HTTP ${response.statusCode}');
-      } catch (e) {
-        print('Intento wifi ${i + 1} fallo: $e');
+        final data = jsonDecode(response.body);
+        if (data['errcode']!=0) {
+          throw Exception('${data['errmsg']} (${data['errcode']})');
+        }
+        return;
+      }
+      on TimeoutException {
+        print('Timeout intento ${i+1}');
+      } 
+      on http.ClientException{
+        print('Error de conexión intento ${i+1}');
+      }
+      catch(e){
+        rethrow;
       }
       await Future.delayed(const Duration(seconds: 2));
+      throw Exception('No fue posible conectar con el servidor');
     }
     return;
   }

@@ -3,6 +3,8 @@ import 'package:api_app/models/passcode.dart';
 import 'package:api_app/services/passcodes/wifi_passcode_service.dart';
 import 'package:api_app/models/passcodes_form_data.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:api_app/theme/app_colors.dart';
+import 'package:api_app/helpers/error_helper.dart';
 
 class PasscodeDetailScreen extends StatefulWidget {
   final Passcode passcode;
@@ -125,6 +127,7 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
 
       if (!mounted) return;
       Navigator.pop(context);
+      FocusScope.of(context).unfocus();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Código actualizado')));
@@ -136,22 +139,34 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
+      FocusScope.of(context).unfocus();
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ).showSnackBar(SnackBar(content: Text(ErrorHelper.parse(e))));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalle del código')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('Detalle del código'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Card(
+              elevation: 2,
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18)
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -174,10 +189,7 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
                         onChanged: (value) {
                           formData.customCode = value;
                         },
-                        decoration: const InputDecoration(
-                          labelText: 'Código',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: buildInput('Código')
                       ),
                     const SizedBox(height: 20),
                     if (!isEditing)
@@ -191,75 +203,122 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
                         onChanged: (value) {
                           formData.name = value;
                         },
-                        decoration: const InputDecoration(
-                          labelText: 'Nombre',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: buildInput('Nombre')
                       ),
                   ],
                 ),
               ),
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 12),
 
-            ListTile(
-              leading: const Icon(Icons.category),
-              title: const Text('Tipo'),
-              subtitle: Text(widget.passcode.typeName),
+            Card(
+              elevation: 2,
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+
+                  ListTile(
+                    leading: Icon(
+                      Icons.category,
+                      color: AppColors.primary,
+                    ),
+                    title: const Text('Tipo'),
+                    subtitle: Text(
+                      widget.passcode.typeName,
+                    ),
+                  ),
+
+                  Divider(
+                    height: 1,
+                    color: Colors.grey.shade300,
+                  ),
+
+                  if (!isEditing)
+                    ListTile(
+                      leading: Icon(
+                        Icons.calendar_today,
+                        color: AppColors.primary,
+                      ),
+                      title: const Text('Inicio'),
+                      subtitle: Text(
+                        widget.passcode.formattedStartDate,
+                      ),
+                    )
+                  else
+                    ListTile(
+                      leading: Icon(
+                        Icons.calendar_today,
+                        color: AppColors.primary,
+                      ),
+                      title: const Text('Inicio'),
+                      subtitle: Text(
+                        widget.passcode.formattedStartDate,
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(
+                          Icons.edit_calendar,
+                          color: AppColors.primary,
+                        ),
+                        onPressed: selectStartDate,
+                      ),
+                    ),
+
+                  if(formData.requiresEndDate)
+                  Divider(
+                    height:1,
+                    color: Colors.grey.shade300,
+                  ),
+
+                  if(formData.requiresEndDate)
+
+                    if(!isEditing)
+                      ListTile(
+                        leading: Icon(
+                          Icons.event_busy,
+                          color: AppColors.primary,
+                        ),
+                        title: const Text('Fin'),
+                        subtitle: Text(
+                          widget.passcode.formattedEndDate,
+                        ),
+                      )
+                    else
+                      ListTile(
+                        leading: Icon(
+                          Icons.event_busy,
+                          color: AppColors.primary,
+                        ),
+                        title: const Text('Fin'),
+                        subtitle: Text(
+                          widget.passcode.formattedEndDate,
+                        ),
+                        trailing: IconButton(
+                          icon: Icon(
+                            Icons.edit_calendar,
+                            color: AppColors.primary,
+                          ),
+                          onPressed: selectEndDate,
+                        ),
+                      ),
+                ],
+              ),
             ),
 
-            const Divider(),
-
-            if (!isEditing)
-              ListTile(
-                leading: const Icon(Icons.calendar_today),
-                title: const Text('Inicio'),
-                subtitle: Text(widget.passcode.formattedStartDate),
-              )
-            else
-              ListTile(
-                leading: const Icon(Icons.calendar_today),
-
-                title: const Text('Inicio'),
-
-                subtitle: Text(widget.passcode.formattedStartDate),
-
-                trailing: IconButton(
-                  icon: const Icon(Icons.edit_calendar),
-
-                  onPressed: selectStartDate,
-                ),
-              ),
-
-            const Divider(),
-
-            if (formData.requiresEndDate)
-              if (!isEditing)
-                ListTile(
-                  leading: const Icon(Icons.event_busy),
-                  title: const Text('Fin'),
-                  subtitle: Text(widget.passcode.formattedEndDate),
-                )
-              else
-                ListTile(
-                  leading: const Icon(Icons.event_busy),
-
-                  title: const Text('Fin'),
-
-                  subtitle: Text(widget.passcode.formattedEndDate),
-
-                  trailing: IconButton(
-                    icon: const Icon(Icons.edit_calendar),
-
-                    onPressed: selectEndDate,
-                  ),
-                ),
-
-            const SizedBox(height: 40),
+            const SizedBox(height: 15),
             SizedBox(
               height: 55,
               child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
                 icon: Icon(isEditing ? Icons.save : Icons.edit),
                 label: Text(isEditing ? 'Guardar cambios' : 'Editar código'),
                 onPressed: () {
@@ -277,6 +336,16 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
             SizedBox(
               height: 55,
               child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.primary,
+                  side: BorderSide(
+                    color: Colors.grey.shade300,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
                 icon: const Icon(Icons.share),
                 label: const Text('Compartir'),
                 onPressed: () {
@@ -288,9 +357,37 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
             SizedBox(
               height: 55,
               child: FilledButton.icon(
-                icon: const Icon(Icons.delete),
-                label: const Text('Eliminar código'),
-                onPressed: deletePasscode,
+                style: FilledButton.styleFrom(
+                  backgroundColor: isEditing
+                      ? Colors.grey.shade500
+                      : Colors.red.shade400,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                icon: Icon(
+                  isEditing
+                      ? Icons.close
+                      : Icons.delete,
+                ),
+                label: Text(
+                  isEditing
+                      ? 'Cancelar edición'
+                      : 'Eliminar código',
+                ),
+                onPressed: () {
+                  if (isEditing) {
+                    setState(() {
+                      isEditing = false;
+                      codeController.text =
+                          widget.passcode.keyboardPwd;
+                      nameController.text =
+                          widget.passcode.keyboardPwdName;
+                    });
+                  } else {
+                    deletePasscode();
+                  }
+                },
               ),
             ),
           ],
@@ -351,17 +448,48 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
   }
 
   String buildShareMessage() {
+    final hasEndDate =
+        widget.passcode.keyboardPwdType != 1 &&
+        widget.passcode.keyboardPwdType != 2;
     return [
-      'Muy buenas tardes,',
-      'Has recibido el siguiente código de acceso:',
+      'Muy buen día,',
+      'Has recibido el siguiente código de acceso de tipo '
+      '${widget.passcode.typeName.toLowerCase()}:',
+      '',
       widget.passcode.keyboardPwd.trim(),
+      '',
       'Válido desde:',
       widget.passcode.formattedStartDate.trim(),
       'Hasta:',
-      widget.passcode.formattedEndDate.trim(),
+      hasEndDate
+          ? widget.passcode.formattedEndDate.trim()
+          : 'Indefinido',
       'Puedes aperturar la bóveda del vehículo económico:',
       widget.lockAlias.trim(),
       'Saludos.',
     ].join('\n');
+  }
+
+  InputDecoration buildInput(String label){
+    return InputDecoration(
+      labelText: label,
+      filled:true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.grey.shade300)
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.grey.shade300)
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: AppColors.primary,
+          width:1.5,
+        ),
+      ),
+    );
   }
 }

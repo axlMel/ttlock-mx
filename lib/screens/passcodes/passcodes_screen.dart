@@ -78,13 +78,10 @@ class _PasscodesScreen extends State<PasscodesScreen> {
             Icons.arrow_back_ios_new,
           ),
         ),
-
         actions: [
-
           IconButton(
             onPressed: () {
-
-              //aquí luego conectaremos Restaurar
+              //aquí luego conectaré Restaurar
             },
             icon: const Icon(
               Icons.restore,
@@ -148,6 +145,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
                 token: widget.token,
                 lockData: widget.lockData,
                 communicationMode: widget.communicationMode,
+                lockAlias: widget.lockAlias,
               ),
             ),
           );

@@ -46,26 +46,20 @@ class Passcode {
   }
 
   DateTime? get endDateTime {
-
     if(endDate==0){
       return null;
     }
-
     return DateTime.fromMillisecondsSinceEpoch(
       endDate,
     );
   }
-
   String get typeName {
     return PasscodesFormData.typeNames[
       keyboardPwdType
     ] ?? 'Desconocido';
   }
-
   String get formattedStartDate {
-
     final date=startDateTime;
-
     return
       '${date.day}/'
       '${date.month}/'
@@ -73,15 +67,11 @@ class Passcode {
       ' ${date.hour.toString().padLeft(2,'0')}:'
       '${date.minute.toString().padLeft(2,'0')}';
   }
-
   String get formattedEndDate {
-
     if(endDateTime==null){
       return 'Sin fecha límite';
     }
-
     final date=endDateTime!;
-
     return
       '${date.day}/'
       '${date.month}/'
@@ -89,5 +79,4 @@ class Passcode {
       ' ${date.hour.toString().padLeft(2,'0')}:'
       '${date.minute.toString().padLeft(2,'0')}';
   }
-
 }
