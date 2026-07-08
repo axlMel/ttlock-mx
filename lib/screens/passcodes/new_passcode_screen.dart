@@ -459,10 +459,13 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
   Future<void> createPasscode() async {
     final startMills = formData.startDate.millisecondsSinceEpoch;
     final endMills = formData.endDate?.millisecondsSinceEpoch ?? 0;
-    PasscodeCreationResult? result;
+
+    late PasscodeCreationResult result;
+
     setState(() {
       isSaving = true;
     });
+
     try {
       if (formData.isCustom) {
         result = await wifiService.getCustomPasscode(
@@ -472,7 +475,7 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
           formData.name,
           formData.type,
           startMills,
-          endMills
+          endMills,
         );
       } else {
         result = await wifiService.getRandomPasscode(
@@ -481,17 +484,24 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
           formData.type,
           formData.name,
           startMills,
-          endMills
+          endMills,
         );
       }
-      if(!mounted) return;
-      Navigator.push(context, MaterialPageRoute(builder: (_) => CreatedPasscodeScreen(
-        result: result!,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        lockAlias: widget.lockAlias,
-        passcodeType: formData.type,)));
-      
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CreatedPasscodeScreen(
+            result: result,
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+            lockAlias: widget.lockAlias,
+            passcodeType: formData.type,
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
 
@@ -500,15 +510,12 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
           content: Text(ErrorHelper.parse(e)),
         ),
       );
-
     } finally {
-
       if (mounted) {
         setState(() {
           isSaving = false;
         });
       }
-
     }
   }
 

@@ -52,7 +52,7 @@ class WifiPasscodeService {
     throw Exception('No fue posible conectar con el servidor');
   }
 
-  Future<PasscodeCreationResult?> getRandomPasscode(
+  Future<PasscodeCreationResult> getRandomPasscode(
     String token,
     int lockId,
     int keyboardPwdType,
@@ -107,7 +107,7 @@ class WifiPasscodeService {
     throw Exception('No fue posible conectar con el servidor');
   }
 
-  Future<PasscodeCreationResult?> getCustomPasscode(
+  Future<PasscodeCreationResult> getCustomPasscode(
     String token,
     int lockId,
     int keyboardPwd,
