@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:api_app/models/passcode_creation_result.dart';
-import 'package:api_app/models/passcode.dart';
 import 'package:api_app/models/passcodes_form_data.dart';
-import 'package:api_app/models/passcode_creation_result.dart';
 
 class CreatedPasscodeScreen extends StatelessWidget {
   final PasscodeCreationResult result;

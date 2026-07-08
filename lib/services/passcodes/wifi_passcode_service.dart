@@ -27,22 +27,29 @@ class WifiPasscodeService {
         final response = await http.get(url).timeout(Duration(seconds: 30));
         print('GETCODIGOS STATUS: ${response.statusCode}');
         print('GET BODY: ${response.body}');
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          if (data['errcode'] != null && data['errcode'] != 0) {
-            throw Exception(data['errmsg']);
-          }
-          final List<dynamic> accessCodesJson = data['list'] ?? [];
-          return accessCodesJson
-              .map((json) => Passcode.fromJson(json))
-              .toList();
+        if (response.statusCode != 200) {
+          throw Exception('HTTP ${response.statusCode}');
         }
-      } catch (e) {
-        print('Intento passcodes ${i + 1} falló: $e');
+        final data = jsonDecode(response.body);
+        if (data.containsKey('errcode') && data['errcode'] != 0) {
+          throw Exception("${data['errmsg']} (${data['errcode']})");
+        }
+        final List<dynamic> accessCodesJson = data['list'] ?? [];
+        return accessCodesJson
+            .map((json) => Passcode.fromJson(json))
+            .toList();
+      } on TimeoutException {
+        print('Timeout intento ${i+1}');
+      } 
+      on http.ClientException catch (e) {
+        print("Error de conexión intento ${i+1}: $e");
+      }
+      catch(e){
+        rethrow;
       }
       await Future.delayed(const Duration(seconds: 2));
     }
-    return [];
+    throw Exception('No fue posible conectar con el servidor');
   }
 
   Future<PasscodeCreationResult?> getRandomPasscode(
@@ -77,20 +84,27 @@ class WifiPasscodeService {
         print('UNLOCK STATUS: ${response.statusCode}');
         print('UNLOCK BODY: ${response.body}');
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          if (data['errcode'] != null && data['errcode'] != 0) {
-            throw Exception('${data['errms']}');
-          }
-          return PasscodeCreationResult.fromJson(data);
+        if (response.statusCode != 200) {
+          throw Exception('HTTP ${response.statusCode}');
         }
-        throw Exception('HTTP ${response.statusCode}');
-      } catch (e) {
-        print('Intento random passcode ${i + 1} falló: $e');
+        final data = jsonDecode(response.body);
+        if (data['errcode']!=0) {
+          throw Exception('${data['errmsg']} (${data['errcode']})');
+        }
+        return PasscodeCreationResult.fromJson(data);
+      }
+      on TimeoutException {
+        print('Timeout intento ${i+1}');
+      } 
+      on http.ClientException{
+        print('Error de conexión intento ${i+1}');
+      }
+      catch(e){
+        rethrow;
       }
       await Future.delayed(const Duration(seconds: 2));
     }
-    return null;
+    throw Exception('No fue posible conectar con el servidor');
   }
 
   Future<PasscodeCreationResult?> getCustomPasscode(
@@ -127,23 +141,30 @@ class WifiPasscodeService {
             .timeout(const Duration(seconds: 30));
         print('CUSTOM PASSCODE STATUS: ${response.statusCode}');
         print('CUSTOM PASSCODE BODY: ${response.body}');
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          if (data['errcode'] != null && data['errcode'] != 0) {
-            throw Exception(data['errmsg']);
-          }
-          return PasscodeCreationResult(
+        if (response.statusCode != 200) {
+          throw Exception('HTTP ${response.statusCode}');
+        }
+        final data = jsonDecode(response.body);
+        if (data['errcode']!=0) {
+          throw Exception('${data['errmsg']} (${data['errcode']})');
+        }
+        return PasscodeCreationResult(
             keyboardPwdId: data['keyboardPwdId'],
             keyboardPwd: keyboardPwd.toString(),
-          );
-        }
-        throw Exception('HTTP ${response.statusCode}');
-      } catch (e) {
-        print('Intento custom passcode ${i + 1} falló: $e');
+        );
+      }
+      on TimeoutException {
+        print('Timeout intento ${i+1}');
+      } 
+      on http.ClientException{
+        print('Error de conexión intento ${i+1}');
+      }
+      catch(e){
+        rethrow;
       }
       await Future.delayed(const Duration(seconds: 2));
     }
-    return null;
+    throw Exception('No fue posible conectar con el servidor');
   }
 
   Future<void> deletePasscode(
@@ -172,20 +193,27 @@ class WifiPasscodeService {
             .timeout(const Duration(seconds: 30));
         print('DELETE PASSCODE STATUS: ${response.statusCode}');
         print('DELETE PASSCODE BODY: ${response.body}');
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          if (data['errcode'] != 0) {
-            throw Exception(data['errmsg']);
-          }
-          return;
+        if (response.statusCode != 200) {
+          throw Exception('HTTP ${response.statusCode}');
         }
-        throw Exception('HTTP ${response.statusCode}');
-      } catch (e) {
-        print('Intento wifi ${i + 1} fallo: $e');
+        final data = jsonDecode(response.body);
+        if (data['errcode']!=0) {
+          throw Exception('${data['errmsg']} (${data['errcode']})');
+        }
+        return;
+      }
+      on TimeoutException {
+        print('Timeout intento ${i+1}');
+      } 
+      on http.ClientException{
+        print('Error de conexión intento ${i+1}');
+      }
+      catch(e){
+        rethrow;
       }
       await Future.delayed(const Duration(seconds: 2));
     }
-    return;
+    throw Exception('No fue posible conectar con el servidor');
   }
 
   Future<void> changePasscode(
@@ -241,8 +269,7 @@ class WifiPasscodeService {
         rethrow;
       }
       await Future.delayed(const Duration(seconds: 2));
-      throw Exception('No fue posible conectar con el servidor');
     }
-    return;
+    throw Exception('No fue posible conectar con el servidor');
   }
 }
