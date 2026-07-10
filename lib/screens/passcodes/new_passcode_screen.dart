@@ -7,6 +7,7 @@ import 'package:api_app/models/passcode_creation_result.dart';
 import 'package:api_app/screens/passcodes/created_passcode_screen.dart';
 import 'package:api_app/widgets/loading_overlay.dart';
 import 'package:api_app/helpers/error_helper.dart';
+import 'package:api_app/services/passcodes/bluetooth_passcode_service.dart';
 
 class NewPasscodeScreen extends StatefulWidget {
   final int lockId;
@@ -25,6 +26,7 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
   final wifiService = WifiPasscodeService();
   final nameController = TextEditingController();
   final codeController = TextEditingController();
+  final bluetoothService = BluetoothPasscodeService();
   bool isSaving = false;
   DateTime startDate = DateTime.now();
   DateTime endDate = DateTime.now().add(const Duration(days: 1));
@@ -40,11 +42,11 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
   void initState() {
     super.initState();
     formData = PasscodesFormData(
-      isCustom: false, 
-      type: 2, 
-      name: '', 
+      isCustom: widget.communicationMode == LockCommunicationMode.bluetooth,
+      type: 2,
+      name: '',
       startDate: DateTime.now(),
-      endDate: DateTime.now().add(const Duration(days: 1))
+      endDate: DateTime.now().add(const Duration(days: 1)),
     );
   }
 
@@ -123,19 +125,38 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
                     ],
                     selected: {formData.isCustom},
                     onSelectionChanged: (value) {
-                      if (!mounted) return;
+                      if (widget.communicationMode == LockCommunicationMode.bluetooth) {
+                        return;
+                      }
                       setState(() {
-                        formData.isCustom = value.first;
+                        formData.isCustom = value.first as bool;
+
                         if (formData.isCustom) {
-                          formData.type=2;
+                          formData.type = 2;
                         } else {
-                          formData.type=1;
+                          formData.type = 1;
                         }
+
                         if (!formData.requiresEndDate) {
                           formData.endDate = null;
+                        } else {
+                          formData.endDate ??=
+                              formData.startDate.add(const Duration(days: 1));
                         }
                       });
                     },
+                  ),
+                  if (widget.communicationMode == LockCommunicationMode.bluetooth)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: Text(
+                      'Bluetooth solo permite códigos personalizados.',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 13,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   if (formData.isCustom)
@@ -467,27 +488,35 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
     });
 
     try {
-      if (formData.isCustom) {
-        result = await wifiService.getCustomPasscode(
-          widget.token,
-          widget.lockId,
-          int.parse(formData.customCode!),
-          formData.name,
-          formData.type,
-          startMills,
-          endMills,
+      if (widget.communicationMode == LockCommunicationMode.bluetooth) {
+        result = await bluetoothService.createCustomPasscode(
+          passcode: formData.customCode!,
+          startDate: startMills,
+          endDate: endMills,
+          lockData: widget.lockData,
         );
       } else {
-        result = await wifiService.getRandomPasscode(
-          widget.token,
-          widget.lockId,
-          formData.type,
-          formData.name,
-          startMills,
-          endMills,
-        );
+        if (formData.isCustom) {
+          result = await wifiService.getCustomPasscode(
+            widget.token,
+            widget.lockId,
+            int.parse(formData.customCode!),
+            formData.name,
+            formData.type,
+            startMills,
+            endMills,
+          );
+        } else {
+          result = await wifiService.getRandomPasscode(
+            widget.token,
+            widget.lockId,
+            formData.type,
+            formData.name,
+            startMills,
+            endMills,
+          );
+        }
       }
-
       if (!mounted) return;
 
       Navigator.push(

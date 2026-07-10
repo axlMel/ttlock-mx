@@ -1,10 +1,12 @@
 import 'package:api_app/screens/passcodes/new_passcode_screen.dart';
+import 'package:api_app/services/passcodes/bluetooth_passcode_service.dart';
 import 'package:api_app/services/passcodes/wifi_passcode_service.dart';
 import 'package:api_app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../models/lock_communication_mode.dart';
 import 'package:api_app/models/passcode.dart';
 import 'package:api_app/screens/passcodes/passcode_detail_screen.dart';
+import 'package:api_app/helpers/error_helper.dart';
 
 class PasscodesScreen extends StatefulWidget {
   final int lockId;
@@ -26,6 +28,7 @@ class PasscodesScreen extends StatefulWidget {
 
 class _PasscodesScreen extends State<PasscodesScreen> {
   final WifiPasscodeService wifiService = WifiPasscodeService();
+  final BluetoothPasscodeService bluetoothService = BluetoothPasscodeService();
   List<Passcode> passcodes = [];
   bool isLoading = true;
   String searchText = '';
@@ -37,16 +40,36 @@ class _PasscodesScreen extends State<PasscodesScreen> {
   }
 
   Future<void> loadPasscodes() async {
-    if (widget.communicationMode == LockCommunicationMode.wifi) {
-      passcodes = await wifiService.getAllPasscodes(
-        widget.token,
-        widget.lockId,
+    try {
+      if (widget.communicationMode == LockCommunicationMode.wifi) {
+        passcodes = await wifiService.getAllPasscodes(
+          widget.token,
+          widget.lockId,
+        );
+      } else {
+        passcodes = await bluetoothService.getAllPasscodes(
+          lockData: widget.lockData,
+        );
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHelper.parse(e)),
+        ),
       );
+
+      setState(() {
+        isLoading = false;
+      });
     }
-    if (!mounted) return;
-    setState(() {
-      isLoading = false;
-    });
   }
 
   List<Passcode> get filteredPasscodes {
