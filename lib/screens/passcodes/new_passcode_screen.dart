@@ -53,320 +53,322 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
+    return LoadingOverlay(
+      isLoading: isSaving,
+      child: Scaffold(
         backgroundColor: AppColors.background,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Nuevo código'),
-      ),
-      body: LoadingOverlay(
-        isLoading: isSaving,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Card(
-            elevation: 2,
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24)
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Modo de generación',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SegmentedButton(
-                    style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.resolveWith((states){
-                        if (states.contains(WidgetState.selected)) {
-                          return AppColors.primary;
-                        }
-                        return Colors.white;
-                      }),
-                      foregroundColor: WidgetStateProperty.resolveWith((states) {
-                        if (states.contains(WidgetState.selected)) {
-                          return Colors.white;
-                        }
-                        return Colors.black87;
-                      }),
-                      side: WidgetStatePropertyAll(
-                        BorderSide(color: Colors.grey.shade300, width: 1)
-                      ),
-                      elevation: const WidgetStatePropertyAll(0),
-                      shape: WidgetStatePropertyAll(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18)
-                        )
-                      )
-                    ),
-                    segments: const [
-                      ButtonSegment(
-                        value: false,
-                        label: Text('Aleatorio'),
-                        icon: Icon(Icons.shuffle)
-                      ),
-                      ButtonSegment(
-                        value: true,
-                        label: Text('Personalizado'),
-                        icon: Icon(Icons.pin)
-                      ),
-                    ],
-                    selected: {formData.isCustom},
-                    onSelectionChanged: (value) {
-                      if (widget.communicationMode == LockCommunicationMode.bluetooth) {
-                        return;
-                      }
-                      setState(() {
-                        formData.isCustom = value.first as bool;
-
-                        if (formData.isCustom) {
-                          formData.type = 2;
-                        } else {
-                          formData.type = 1;
-                        }
-
-                        if (!formData.requiresEndDate) {
-                          formData.endDate = null;
-                        } else {
-                          formData.endDate ??=
-                              formData.startDate.add(const Duration(days: 1));
-                        }
-                      });
-                    },
-                  ),
-                  if (widget.communicationMode == LockCommunicationMode.bluetooth)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 10),
-                    child: Text(
-                      'Bluetooth solo permite códigos personalizados.',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 13,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  if (formData.isCustom)
-                  TextField(
-                    controller: codeController,
-                    onChanged: (value) {
-                      formData.customCode = value;
-                    },
-                    keyboardType: TextInputType.number,
-                    decoration: buildInput('Código')
-                  ),
-                  if (formData.isCustom) const SizedBox(height: 12),
-                  TextField(
-                    controller: nameController,
-                    onChanged: (value) {
-                      formData.name = value;
-                    },
-                    decoration: buildInput('Nombre')
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    dropdownColor: Colors.white,
-                    initialValue: availableTypes.contains(formData.type) ? formData.type : availableTypes.first,
-                    decoration: buildInput('Tipo'),
-                    items: availableTypes.map((type){
-                      return DropdownMenuItem<int>(
-                        value: type,
-                        child: Text(
-                          PasscodesFormData.typeNames[type]!,
-                        )
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if(value == null) return;
-                      if (!mounted) return;
-                      setState(() {
-                        formData.type = value;
-                        if (!formData.requiresEndDate) {
-                          formData.endDate = null;
-                        } else {
-                          formData.endDate ??= formData.startDate.add(const Duration(days:1));
-                        }
-                      });
-                    },
-                  ),
-                  const SizedBox(height:18),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Inicio',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height:10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: AppColors.primary,
-                            side: BorderSide(
-                              color: Colors.grey.shade300,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              vertical:16,
-                            ),
-                          ),
-                          icon: const Icon(Icons.calendar_today),
-                          label: Text(
-                            '${formData.startDate.day}/'
-                            '${formData.startDate.month}/'
-                            '${formData.startDate.year}',
-                          ),
-                          onPressed: selectStartDate,
-                        ),
-                      ),
-                      const SizedBox(width:18),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: AppColors.primary,
-                            side: BorderSide(
-                              color: Colors.grey.shade300,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              vertical:16,
-                            ),
-                          ),
-                          icon: const Icon(Icons.schedule),
-                          label: Text(
-                            '${formData.startDate.hour}:'
-                            '${formData.startDate.minute.toString().padLeft(2,'0')}',
-                          ),
-                          onPressed: selectStartTime,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height:18),
-                  if(showEndDateFields())
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Align(
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Fin',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height:10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: AppColors.primary,
-                                side: BorderSide(
-                                  color: Colors.grey.shade300,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical:16,
-                                ),
-                              ),
-                              icon: const Icon(Icons.calendar_month),
-                              label: Text(
-                                '${formData.endDate!.day}/'
-                                '${formData.endDate!.month}/'
-                                '${formData.endDate!.year}',
-                              ),
-                              onPressed: selectEndDate,
-                            ),
-                          ),
-                          const SizedBox(width:18),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: AppColors.primary,
-                                side: BorderSide(
-                                  color: Colors.grey.shade300,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical:16,
-                                ),
-                              ),
-                              icon: const Icon(Icons.schedule),
-                              label: Text(
-                                '${formData.endDate!.hour}:'
-                                '${formData.endDate!.minute.toString().padLeft(2,'0')}',
-                              ),
-                              onPressed: selectEndTime,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height:18),
-                  buildInfoMessage(),
-                  const SizedBox(height: 18,),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child:  ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18)
-                        )
-                      ),
-                      icon: const Icon(Icons.lock_open),
-                      label: const Text("Crear código", 
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold
-                      ),),
-                      onPressed: createPasscode, 
-                    ),
-                  )
-                ],
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          title: const Text('Nuevo código'),
+        ),
+        body: SingleChildScrollView(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Card(
+              elevation: 2,
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24)
               ),
-            )
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Modo de generación',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SegmentedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith((states){
+                          if (states.contains(WidgetState.selected)) {
+                            return AppColors.primary;
+                          }
+                          return Colors.white;
+                        }),
+                        foregroundColor: WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Colors.white;
+                          }
+                          return Colors.black87;
+                        }),
+                        side: WidgetStatePropertyAll(
+                          BorderSide(color: Colors.grey.shade300, width: 1)
+                        ),
+                        elevation: const WidgetStatePropertyAll(0),
+                        shape: WidgetStatePropertyAll(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18)
+                          )
+                        )
+                      ),
+                      segments: const [
+                        ButtonSegment(
+                          value: false,
+                          label: Text('Aleatorio'),
+                          icon: Icon(Icons.shuffle)
+                        ),
+                        ButtonSegment(
+                          value: true,
+                          label: Text('Personalizado'),
+                          icon: Icon(Icons.pin)
+                        ),
+                      ],
+                      selected: {formData.isCustom},
+                      onSelectionChanged: (value) {
+                        if (widget.communicationMode == LockCommunicationMode.bluetooth) {
+                          return;
+                        }
+                        setState(() {
+                          formData.isCustom = value.first as bool;
+
+                          if (formData.isCustom) {
+                            formData.type = 2;
+                          } else {
+                            formData.type = 1;
+                          }
+
+                          if (!formData.requiresEndDate) {
+                            formData.endDate = null;
+                          } else {
+                            formData.endDate ??=
+                                formData.startDate.add(const Duration(days: 1));
+                          }
+                        });
+                      },
+                    ),
+                    if (widget.communicationMode == LockCommunicationMode.bluetooth)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 10),
+                      child: Text(
+                        'Bluetooth solo permite códigos personalizados.',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 13,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    if (formData.isCustom)
+                    TextField(
+                      controller: codeController,
+                      onChanged: (value) {
+                        formData.customCode = value;
+                      },
+                      keyboardType: TextInputType.number,
+                      decoration: buildInput('Código')
+                    ),
+                    if (formData.isCustom) const SizedBox(height: 12),
+                    TextField(
+                      controller: nameController,
+                      onChanged: (value) {
+                        formData.name = value;
+                      },
+                      decoration: buildInput('Nombre')
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int>(
+                      dropdownColor: Colors.white,
+                      initialValue: availableTypes.contains(formData.type) ? formData.type : availableTypes.first,
+                      decoration: buildInput('Tipo'),
+                      items: availableTypes.map((type){
+                        return DropdownMenuItem<int>(
+                          value: type,
+                          child: Text(
+                            PasscodesFormData.typeNames[type]!,
+                          )
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if(value == null) return;
+                        if (!mounted) return;
+                        setState(() {
+                          formData.type = value;
+                          if (!formData.requiresEndDate) {
+                            formData.endDate = null;
+                          } else {
+                            formData.endDate ??= formData.startDate.add(const Duration(days:1));
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(height:18),
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Inicio',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height:10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: AppColors.primary,
+                              side: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical:16,
+                              ),
+                            ),
+                            icon: const Icon(Icons.calendar_today),
+                            label: Text(
+                              '${formData.startDate.day}/'
+                              '${formData.startDate.month}/'
+                              '${formData.startDate.year}',
+                            ),
+                            onPressed: selectStartDate,
+                          ),
+                        ),
+                        const SizedBox(width:18),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: AppColors.primary,
+                              side: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical:16,
+                              ),
+                            ),
+                            icon: const Icon(Icons.schedule),
+                            label: Text(
+                              '${formData.startDate.hour}:'
+                              '${formData.startDate.minute.toString().padLeft(2,'0')}',
+                            ),
+                            onPressed: selectStartTime,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height:18),
+                    if(showEndDateFields())
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            'Fin',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height:10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: AppColors.primary,
+                                  side: BorderSide(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical:16,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.calendar_month),
+                                label: Text(
+                                  '${formData.endDate!.day}/'
+                                  '${formData.endDate!.month}/'
+                                  '${formData.endDate!.year}',
+                                ),
+                                onPressed: selectEndDate,
+                              ),
+                            ),
+                            const SizedBox(width:18),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: AppColors.primary,
+                                  side: BorderSide(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical:16,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.schedule),
+                                label: Text(
+                                  '${formData.endDate!.hour}:'
+                                  '${formData.endDate!.minute.toString().padLeft(2,'0')}',
+                                ),
+                                onPressed: selectEndTime,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height:18),
+                    buildInfoMessage(),
+                    const SizedBox(height: 18,),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child:  ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18)
+                          )
+                        ),
+                        icon: const Icon(Icons.lock_open),
+                        label: const Text("Crear código", 
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold
+                        ),),
+                        onPressed: createPasscode, 
+                      ),
+                    )
+                  ],
+                ),
+              )
+            ),
           ),
         ),
-      ),
-    );
+      )
+    ); 
   }
   Widget buildInfoMessage() {
     return Card(

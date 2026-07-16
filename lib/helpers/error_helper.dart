@@ -1,3 +1,5 @@
+import 'package:ttlock_flutter/ttlock.dart';
+
 class ErrorHelper {
 
   static const Map<String, String> _errors = {
@@ -65,8 +67,33 @@ class ErrorHelper {
     '-1021':'La tarjeta IC no existe',
     '-1023':'La huella digital no existe',
   };
+  static const Map<TTLockError, String> _bluetoothErrors = {
 
+    TTLockError.bluetoothOff:
+        'Activa el Bluetooth para continuar.',
+    TTLockError.bluetoothConnectTimeout:
+        'No fue posible conectar con la cerradura.',
+    TTLockError.bluetoothDisconnection:
+        'Se perdió la conexión Bluetooth.',
+    TTLockError.lockIsBusy:
+        'La cerradura está ocupada.',
+    TTLockError.invalidLockData:
+        'La información de la cerradura es inválida.',
+    TTLockError.invalidParameter:
+        'Los datos enviados son inválidos.',
+    TTLockError.passcodeExist:
+        'Ese código ya existe.',
+    TTLockError.passcodeNotExist:
+        'Ese código no existe.',
+    TTLockError.lackOfStorageSpaceWhenAddingPasscode:
+        'La memoria de la cerradura está llena.',
+  };
   static String parse(dynamic error) {
+
+    if (error is TTLockError) {
+      return _bluetoothErrors[error] ??
+          'Ocurrió un error Bluetooth.';
+    }
 
     final message = error.toString().replaceFirst(
         'Exception: ',

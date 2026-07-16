@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 class LoadingOverlay extends StatelessWidget {
-
   final bool isLoading;
   final Widget child;
   final String message;
@@ -15,47 +14,36 @@ class LoadingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
 
-    return Stack(
-      children: [
-        child,
-        if (isLoading)
-          Positioned.fill(
-            child: AbsorbPointer(
-              absorbing: true,
-              child: ColoredBox(
-                color: Colors.black.withValues(alpha: 0.25),
-                child: Center(
-                  child: Material(
-                    color: Colors.white,
-                    elevation: 8,
-                    borderRadius: BorderRadius.circular(18),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 25,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const CircularProgressIndicator(),
-                          const SizedBox(height:20),
-                          Text(
-                            message,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
+          child,
+
+          if (isLoading)
+            ColoredBox(
+              color: Colors.black54,
+              child: Center(
+                child: Material(
+                  borderRadius: BorderRadius.circular(18),
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 20),
+                        Text(message),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-
-      ],
+        ],
+      ),
     );
   }
 }

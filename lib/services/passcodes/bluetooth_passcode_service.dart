@@ -26,13 +26,12 @@ class BluetoothPasscodeService {
         );
       },
       (error, message) {
-        completer.completeError(
-          Exception(message),
-        );
+        completer.completeError(error);
       },
     );
     return completer.future;
   }
+  
   Future<List<Passcode>> getAllPasscodes({
     required String lockData,
   }) {
@@ -49,12 +48,11 @@ class BluetoothPasscodeService {
         completer.complete(passcodes);
       },
       (error, message) {
-        completer.completeError(
-          Exception(message),
-        );
+        completer.completeError(error);
       },
     );
 
     return completer.future;
   }
+
 }
