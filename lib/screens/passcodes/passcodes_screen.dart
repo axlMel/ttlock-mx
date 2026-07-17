@@ -231,6 +231,8 @@ class _PasscodesScreen extends State<PasscodesScreen> {
                                     token: widget.token,
                                     lockId: widget.lockId,
                                     lockAlias: widget.lockAlias,
+                                    lockData: widget.lockData,
+                                    communicationMode: widget.communicationMode,
                                   ),
                                 ),
                               );

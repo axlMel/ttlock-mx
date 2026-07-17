@@ -1,23 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:api_app/models/passcode.dart';
 import 'package:api_app/services/passcodes/wifi_passcode_service.dart';
+import 'package:api_app/services/passcodes/bluetooth_passcode_service.dart';
 import 'package:api_app/models/passcodes_form_data.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:api_app/theme/app_colors.dart';
 import 'package:api_app/helpers/error_helper.dart';
 import 'package:api_app/widgets/loading_overlay.dart';
+import 'package:api_app/models/lock_communication_mode.dart';
 
 class PasscodeDetailScreen extends StatefulWidget {
   final Passcode passcode;
   final String token;
   final int lockId;
   final String lockAlias;
+  final String lockData;
+  final LockCommunicationMode communicationMode;
   const PasscodeDetailScreen({
     super.key,
     required this.passcode,
     required this.token,
     required this.lockId,
     required this.lockAlias,
+    required this.lockData,
+    required this.communicationMode,
   });
   @override
   State<PasscodeDetailScreen> createState() => _PasscodeDetailScreenState();
@@ -25,6 +31,7 @@ class PasscodeDetailScreen extends StatefulWidget {
 
 class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
   WifiPasscodeService wifiService = WifiPasscodeService();
+  BluetoothPasscodeService bluetoothService = BluetoothPasscodeService();
   bool isEditing = false;
   bool isSaving = false;
   late TextEditingController nameController;
@@ -83,11 +90,18 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
       isSaving = true;
     });
     try {
-      await wifiService.deletePasscode(
-        widget.token,
-        widget.lockId,
-        widget.passcode.keyboardPwdId,
-      );
+      if (widget.communicationMode == LockCommunicationMode.bluetooth) {
+        await bluetoothService.deletePasscode(
+          passcode: widget.passcode.keyboardPwd,
+          lockData: widget.lockData
+        );
+      } else {
+        await wifiService.deletePasscode(
+          widget.token,
+          widget.lockId,
+          widget.passcode.keyboardPwdId,
+        );
+      }
       if (!mounted) return;
 
       ScaffoldMessenger.of(
@@ -114,15 +128,27 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
       isSaving = true;
     });
     try {
-      await wifiService.changePasscode(
-        widget.token,
-        widget.lockId,
-        widget.passcode.keyboardPwdId,
-        formData.name,
-        int.parse(formData.customCode!),
-        formData.startDate.millisecondsSinceEpoch,
-        formData.endDate?.millisecondsSinceEpoch ?? 0,
-      );
+      if (widget.communicationMode == LockCommunicationMode.bluetooth) {
+        await bluetoothService.changePasscode(
+          originalPasscode: widget.passcode.keyboardPwd,
+          customCode: formData.customCode!,
+          startDate: formData.startDate.millisecondsSinceEpoch,
+          endDate: formData.endDate?.millisecondsSinceEpoch ?? 0,
+          lockData: widget.lockData
+        );
+      } else {
+        if (widget.communicationMode == LockCommunicationMode.wifi) {
+          await wifiService.changePasscode(
+            widget.token,
+            widget.lockId,
+            widget.passcode.keyboardPwdId,
+            formData.name,
+            int.parse(formData.customCode!),
+            formData.startDate.millisecondsSinceEpoch,
+            formData.endDate?.millisecondsSinceEpoch ?? 0,
+          );
+        }
+      }
       if (!mounted) return;
       setState(() {
         widget.passcode.keyboardPwd = formData.customCode!;
@@ -135,9 +161,9 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
       ).showSnackBar(const SnackBar(content: Text('Código actualizado')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(ErrorHelper.parse(e))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(ErrorHelper.parse(e)))
+      );
     }
     finally{
       if(mounted){
@@ -504,4 +530,5 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
       ),
     );
   }
+
 }
