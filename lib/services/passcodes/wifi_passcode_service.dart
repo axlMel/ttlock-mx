@@ -171,6 +171,7 @@ class WifiPasscodeService {
     String token,
     int lockId,
     int keyboardPwdId,
+    int deleteType,
   ) async {
     final url = Uri.parse('$baseUrl/v3/keyboardPwd/delete');
     final date = DateTime.now().millisecondsSinceEpoch;
@@ -186,7 +187,7 @@ class WifiPasscodeService {
                 'accessToken': token,
                 'lockId': lockId.toString(),
                 'keyboardPwdId': keyboardPwdId.toString(),
-                'deleteType': '2',
+                'deleteType': deleteType.toString(),
                 'date': date.toString(),
               },
             )

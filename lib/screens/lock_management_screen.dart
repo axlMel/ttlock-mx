@@ -561,7 +561,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                     builder: (_) => PasscodesScreen(
                                       lockId: widget.keyData.lockInfo.lockId,
                                       token: widget.token,
-                                      lockData: widget.keyData.lockInfo.lockData,
+                                      keyData: widget.keyData,
                                       communicationMode: selectedMode,
                                       lockAlias: widget.keyData.lockInfo.lockAlias,
                                     ),

@@ -3,7 +3,7 @@ class LockInfo {
   final String lockAlias;
   final String lockMac;
   final String lockName;
-  final String lockData;
+  String lockData;
 
   LockInfo({
     required this.lockId,

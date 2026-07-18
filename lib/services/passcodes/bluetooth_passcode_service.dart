@@ -93,14 +93,14 @@ class BluetoothPasscodeService {
     return completer.future;
   }
 
-  Future<void> resetAllPasscodes({
+  Future<String> resetAllPasscodes({
     required String lockData
   }) {
-    final completer = Completer<void>();
+    final completer = Completer<String>();
     TTLock.resetPasscode(
       lockData, 
-      (_) {
-        completer.complete();
+      (newLockData) {
+        completer.complete(newLockData);
       },
       (error, message) {
         completer.completeError(error);

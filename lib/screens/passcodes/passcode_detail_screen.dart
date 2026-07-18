@@ -95,11 +95,18 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
           passcode: widget.passcode.keyboardPwd,
           lockData: widget.lockData
         );
+        await wifiService.deletePasscode(
+          widget.token,
+          widget.lockId,
+          widget.passcode.keyboardPwdId,
+          1,
+        );
       } else {
         await wifiService.deletePasscode(
           widget.token,
           widget.lockId,
           widget.passcode.keyboardPwdId,
+          2
         );
       }
       if (!mounted) return;
