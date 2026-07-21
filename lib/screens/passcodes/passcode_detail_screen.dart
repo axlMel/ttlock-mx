@@ -493,6 +493,19 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
   }
 
   String buildShareMessage() {
+    if (widget.passcode.typeName == 'Eliminar todos') {
+      return [
+        'Código para eliminar registros',
+        '',
+        widget.passcode.keyboardPwd,
+        '',
+        'Este código debe introducirse en la cerradura.',
+        'Al utilizarlo se eliminarán todos los códigos registrados, excepto el administrador.',
+        '',
+        'Cerradura:',
+        widget.lockAlias,
+      ].join('\n');
+    }
     final hasEndDate =
         widget.passcode.keyboardPwdType != 1 &&
         widget.passcode.keyboardPwdType != 2;

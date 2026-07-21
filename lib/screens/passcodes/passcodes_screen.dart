@@ -9,6 +9,8 @@ import 'package:api_app/models/passcode.dart';
 import 'package:api_app/screens/passcodes/passcode_detail_screen.dart';
 import 'package:api_app/helpers/error_helper.dart';
 import 'package:api_app/models/ekey.dart';
+import 'package:api_app/screens/passcodes/created_passcode_screen.dart';
+import 'package:api_app/models/passcode_creation_result.dart';
 
 class PasscodesScreen extends StatefulWidget {
   final int lockId;
@@ -84,6 +86,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
   }
 
   Future<void> deleteAllPasscodes() async {
+    late PasscodeCreationResult result;
     final confirm = await showDialog(
       context: context,
       builder: (_) {
@@ -116,16 +119,29 @@ class _PasscodesScreen extends State<PasscodesScreen> {
         );
         widget.keyData.lockInfo.lockData = newlockData;
       } else {
-        if (widget.communicationMode == LockCommunicationMode.wifi) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'TTLock no permite restablecer todos los códigos remotamente.',
-              ),
+        final now = DateTime.now();
+        result = await wifiService.getRandomPasscode(
+          widget.token,
+          widget.keyData.lockInfo.lockId,
+          4,
+          'Eliminar todos',
+          now.millisecondsSinceEpoch,
+          now.add(const Duration(days: 1)).millisecondsSinceEpoch,
+        );
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CreatedPasscodeScreen(
+              result: result,
+              startDate: now,
+              endDate: now.add(const Duration(days: 1)),
+              lockAlias: widget.lockAlias,
+              passcodeType: 4,
             ),
-          );
-          return;
-        }
+          ),
+        );
+        return;
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Codigos eliminados')));

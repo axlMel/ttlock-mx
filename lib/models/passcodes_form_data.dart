@@ -19,6 +19,7 @@ class PasscodesFormData {
     1:'Una vez',
     2:'Permanente',
     3:'Periodo',
+    4:'Eliminar',
     5:'Fin de semana',
     6:'Diario',
     7:'Días laborales',

@@ -524,13 +524,16 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => CreatedPasscodeScreen(
-            result: result,
-            startDate: formData.startDate,
-            endDate: formData.endDate,
-            lockAlias: widget.lockAlias,
-            passcodeType: formData.type,
-          ),
+          builder: (_) {
+            print('ENTRO AL BUILDER');
+            return CreatedPasscodeScreen(
+              result: result,
+              startDate: formData.startDate,
+              endDate: formData.endDate,
+              lockAlias: widget.lockAlias,
+              passcodeType: formData.type,
+            );
+          },
         ),
       );
     } catch (e) {

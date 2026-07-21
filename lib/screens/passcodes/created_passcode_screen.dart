@@ -35,9 +35,11 @@ class CreatedPasscodeScreen extends StatelessWidget {
 
               const SizedBox(height: 25),
 
-              const Text(
-                'Código generado correctamente',
-                style: TextStyle(
+              Text(
+                passcodeType == 4
+                    ? 'Código para eliminar registros'
+                    : 'Código generado correctamente',
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -73,9 +75,24 @@ class CreatedPasscodeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
-              const SizedBox(height:30),
-
+              const SizedBox(height: 20,),
+              if (passcodeType == 4) ...[
+                const SizedBox(height: 20),
+                const Card(
+                  elevation: 2,
+                  color: Colors.white,
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text(
+                      'Este código debe introducirse en la cerradura.\n\n'
+                      'Al utilizarlo se eliminarán todos los códigos registrados, '
+                      'excepto el código administrador.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 20),
               Row(
                 children: [
 
@@ -141,11 +158,12 @@ class CreatedPasscodeScreen extends StatelessWidget {
                   ),
 
                   onPressed: () {
-
-                    Navigator.pop(context, true);
-
-                    Navigator.pop(context, true);
-
+                    if (passcodeType == 4) {
+                      Navigator.pop(context, true);
+                    } else {
+                      Navigator.pop(context, true);
+                      Navigator.pop(context, true);
+                    }
                   },
                 ),
               ),
@@ -158,10 +176,24 @@ class CreatedPasscodeScreen extends StatelessWidget {
   }
 
   String buildShareMessage() {
+    if (passcodeType == 4) {
+      return [
+        'Código para eliminar registros',
+        '',
+        result.keyboardPwd,
+        '',
+        'Este código debe introducirse en la cerradura.',
+        'Al utilizarlo se eliminarán todos los códigos registrados, excepto el administrador.',
+        '',
+        'Cerradura:',
+        lockAlias,
+      ].join('\n');
+    }
     final hasEndDate =
         passcodeType != 1 &&
         passcodeType != 2;
     return [
+      
       'Muy buen día,',
 
       'Has recibido el siguiente código de acceso de tipo '

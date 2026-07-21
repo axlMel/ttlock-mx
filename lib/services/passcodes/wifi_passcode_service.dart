@@ -66,32 +66,30 @@ class WifiPasscodeService {
     print('LOCK ID: $lockId');
     for (var i = 0; i < 6; i++) {
       try {
-        final response = await http
-            .post(
-              url,
-              body: {
-                'clientId': clientId,
-                'accessToken': token,
-                'lockId': lockId.toString(),
-                'keyboardPwdType': keyboardPwdType.toString(),
-                'keyboardPwdName': keyboardPwdName,
-                'startDate': startDate.toString(),
-                'endDate': endDate.toString(),
-                'date': date.toString(),
-              },
-            )
-            .timeout(const Duration(seconds: 30));
+        final response = await http.post(
+          url,
+          body: {
+            'clientId': clientId,
+            'accessToken': token,
+            'lockId': lockId.toString(),
+            'keyboardPwdType': keyboardPwdType.toString(),
+            'keyboardPwdName': keyboardPwdName,
+            'startDate': startDate.toString(),
+            'endDate': endDate.toString(),
+            'date': date.toString(),
+          },
+        ).timeout(const Duration(seconds: 30));
         print('UNLOCK STATUS: ${response.statusCode}');
         print('UNLOCK BODY: ${response.body}');
-
         if (response.statusCode != 200) {
           throw Exception('HTTP ${response.statusCode}');
         }
         final data = jsonDecode(response.body);
-        if (data['errcode']!=0) {
+        if (data.containsKey('errcode') && data['errcode'] != 0) {
           throw Exception('${data['errmsg']} (${data['errcode']})');
         }
-        return PasscodeCreationResult.fromJson(data);
+        final result = PasscodeCreationResult.fromJson(data);
+        return result;
       }
       on TimeoutException {
         print('Timeout intento ${i+1}');
