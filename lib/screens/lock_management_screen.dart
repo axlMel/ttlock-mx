@@ -6,15 +6,14 @@ import '../services/bluetooth_lock_service.dart';
 import '../services/wifi_lock_service.dart';
 import 'package:api_app/screens/passcodes/passcodes_screen.dart';
 import '../models/lock_communication_mode.dart';
+import '../services/auth_manager.dart';
 
 class LockManagementScreen extends StatefulWidget {
   final EKey keyData;
-  final String token;
 
   const LockManagementScreen({
     super.key,
     required this.keyData,
-    required this.token,
   });
 
   @override
@@ -28,13 +27,14 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
   bool isUnlocking = false;
   final BluetoothLockService bluetoothService = BluetoothLockService();
   final WifiLockService wifiService = WifiLockService();
+  late String token;
 
   String lastSync = 'Hace 2 min';
   LockCommunicationMode selectedMode = LockCommunicationMode.wifi;
 
   Future<void> loadWifiInfo() async {
     final result = await WifiLockService().getWifiDetails(
-      widget.token,
+      token,
       widget.keyData.lockInfo.lockId,
     );
     if (!mounted) return;
@@ -47,8 +47,11 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
   @override
   void initState() {
     super.initState();
-
-    loadWifiInfo();
+    initialize();
+  }
+  Future<void> initialize() async {
+    token = await AuthManager.getToken() ?? '';
+    await loadWifiInfo();
   }
 
   Future<void> refreshLockStatus() async {
@@ -152,7 +155,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
     });
     try {
       await WifiLockService().unlock(
-        widget.token,
+        token,
         widget.keyData.lockInfo.lockId,
       );
       if (!mounted) return;
@@ -559,11 +562,8 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => PasscodesScreen(
-                                      lockId: widget.keyData.lockInfo.lockId,
-                                      token: widget.token,
                                       keyData: widget.keyData,
                                       communicationMode: selectedMode,
-                                      lockAlias: widget.keyData.lockInfo.lockAlias,
                                     ),
                                   ),
                                 );

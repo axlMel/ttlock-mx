@@ -5,13 +5,11 @@ import '../screens/lock_management_screen.dart';
 
 class LockCard extends StatefulWidget {
   final EKey keyData;
-  final String token;
   final VoidCallback onTap;
 
   const LockCard({
     super.key,
     required this.keyData,
-    required this.token,
     required this.onTap,
   });
 
@@ -21,16 +19,13 @@ class LockCard extends StatefulWidget {
 
 class _LockCardState extends State<LockCard> {
   bool isPressed = false;
-
   Color getBatteryColor() {
     if (widget.keyData.lockState.electricQuantity > 50) {
       return Colors.green;
     }
-
     if (widget.keyData.lockState.electricQuantity > 20) {
       return Colors.orange;
     }
-
     return Colors.red;
   }
 
@@ -43,32 +38,27 @@ class _LockCardState extends State<LockCard> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-
           onTapDown: (_) {
             setState(() {
               isPressed = true;
             });
           },
-
           onTapUp: (_) {
             setState(() {
               isPressed = false;
             });
           },
-
           onTapCancel: () {
             setState(() {
               isPressed = false;
             });
           },
-
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => LockManagementScreen(
                   keyData: widget.keyData,
-                  token: widget.token,
                 ),
               ),
             );

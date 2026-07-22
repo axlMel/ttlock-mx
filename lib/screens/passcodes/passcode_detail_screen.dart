@@ -1,3 +1,4 @@
+import 'package:api_app/models/ekey.dart';
 import 'package:flutter/material.dart';
 import 'package:api_app/models/passcode.dart';
 import 'package:api_app/services/passcodes/wifi_passcode_service.dart';
@@ -8,21 +9,16 @@ import 'package:api_app/theme/app_colors.dart';
 import 'package:api_app/helpers/error_helper.dart';
 import 'package:api_app/widgets/loading_overlay.dart';
 import 'package:api_app/models/lock_communication_mode.dart';
+import 'package:api_app/services/auth_manager.dart';
 
 class PasscodeDetailScreen extends StatefulWidget {
+  final EKey keyData;
   final Passcode passcode;
-  final String token;
-  final int lockId;
-  final String lockAlias;
-  final String lockData;
   final LockCommunicationMode communicationMode;
   const PasscodeDetailScreen({
     super.key,
     required this.passcode,
-    required this.token,
-    required this.lockId,
-    required this.lockAlias,
-    required this.lockData,
+    required this.keyData,
     required this.communicationMode,
   });
   @override
@@ -37,10 +33,12 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
   late TextEditingController nameController;
   late TextEditingController codeController;
   late PasscodesFormData formData;
+  late String token;
 
   @override
   void initState() {
     super.initState();
+    initialize();
     nameController = TextEditingController(
       text: widget.passcode.keyboardPwdName,
     );
@@ -56,6 +54,9 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
           ? null
           : DateTime.fromMillisecondsSinceEpoch(widget.passcode.endDate),
     );
+  }
+  Future<void> initialize() async {
+    token = await AuthManager.getToken() ?? '';
   }
 
   Future<void> deletePasscode() async {
@@ -93,18 +94,18 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
       if (widget.communicationMode == LockCommunicationMode.bluetooth) {
         await bluetoothService.deletePasscode(
           passcode: widget.passcode.keyboardPwd,
-          lockData: widget.lockData
+          lockData: widget.keyData.lockInfo.lockData
         );
         await wifiService.deletePasscode(
-          widget.token,
-          widget.lockId,
+          token,
+          widget.keyData.lockInfo.lockId,
           widget.passcode.keyboardPwdId,
           1,
         );
       } else {
         await wifiService.deletePasscode(
-          widget.token,
-          widget.lockId,
+          token,
+          widget.keyData.lockInfo.lockId,
           widget.passcode.keyboardPwdId,
           2
         );
@@ -141,13 +142,13 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
           customCode: formData.customCode!,
           startDate: formData.startDate.millisecondsSinceEpoch,
           endDate: formData.endDate?.millisecondsSinceEpoch ?? 0,
-          lockData: widget.lockData
+          lockData: widget.keyData.lockInfo.lockData
         );
       } else {
         if (widget.communicationMode == LockCommunicationMode.wifi) {
           await wifiService.changePasscode(
-            widget.token,
-            widget.lockId,
+            token,
+            widget.keyData.lockInfo.lockId,
             widget.passcode.keyboardPwdId,
             formData.name,
             int.parse(formData.customCode!),
@@ -503,7 +504,7 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
         'Al utilizarlo se eliminarán todos los códigos registrados, excepto el administrador.',
         '',
         'Cerradura:',
-        widget.lockAlias,
+        widget.keyData.lockInfo.lockAlias,
       ].join('\n');
     }
     final hasEndDate =
@@ -523,7 +524,7 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
           ? widget.passcode.formattedEndDate.trim()
           : 'Indefinido',
       'Puedes aperturar la bóveda del vehículo económico:',
-      widget.lockAlias.trim(),
+      widget.keyData.lockInfo.lockAlias.trim(),
       'Saludos.',
     ].join('\n');
   }

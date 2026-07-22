@@ -3,17 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:api_app/models/passcode_creation_result.dart';
 import 'package:api_app/models/passcodes_form_data.dart';
+import 'package:api_app/models/ekey.dart';
 
 class CreatedPasscodeScreen extends StatelessWidget {
   final PasscodeCreationResult result;
   final DateTime startDate;
   final DateTime? endDate;
-  final String lockAlias;
+  final EKey keyData;
   final int passcodeType;
 
   const CreatedPasscodeScreen({
     super.key,
-    required this.result, required this.startDate, this.endDate, required this.lockAlias, required this.passcodeType,
+    required this.result, required this.startDate, this.endDate, required this.keyData, required this.passcodeType,
   });
 
   @override
@@ -186,7 +187,7 @@ class CreatedPasscodeScreen extends StatelessWidget {
         'Al utilizarlo se eliminarán todos los códigos registrados, excepto el administrador.',
         '',
         'Cerradura:',
-        lockAlias,
+        keyData.lockInfo.lockAlias,
       ].join('\n');
     }
     final hasEndDate =
@@ -208,7 +209,7 @@ class CreatedPasscodeScreen extends StatelessWidget {
           ? formatDateTime(endDate!)
           : '-',
       'Puedes aperturar la bóveda del vehículo económico:',
-      lockAlias,
+      keyData.lockInfo.lockAlias,
       'Saludos.',
     ].join('\n');
   }

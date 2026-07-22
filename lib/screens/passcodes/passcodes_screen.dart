@@ -11,20 +11,15 @@ import 'package:api_app/helpers/error_helper.dart';
 import 'package:api_app/models/ekey.dart';
 import 'package:api_app/screens/passcodes/created_passcode_screen.dart';
 import 'package:api_app/models/passcode_creation_result.dart';
+import 'package:api_app/services/auth_manager.dart';
 
 class PasscodesScreen extends StatefulWidget {
-  final int lockId;
-  final String token;
   final EKey keyData;
-  final String lockAlias;
   final LockCommunicationMode communicationMode;
   const PasscodesScreen({
     super.key,
-    required this.lockId,
-    required this.token,
     required this.keyData,
     required this.communicationMode,
-    required this.lockAlias, 
   });
   @override
   State<PasscodesScreen> createState() => _PasscodesScreen();
@@ -37,19 +32,24 @@ class _PasscodesScreen extends State<PasscodesScreen> {
   bool isLoading = true;
   bool isRestarting = false;
   String searchText = '';
+  late String token;
 
   @override
   void initState() {
     super.initState();
-    loadPasscodes();
+    initialize();
+  }
+  Future<void> initialize() async {
+    token = await AuthManager.getToken() ?? '';
+    await loadPasscodes();
   }
 
   Future<void> loadPasscodes() async {
     try {
       if (widget.communicationMode == LockCommunicationMode.wifi) {
         passcodes = await wifiService.getAllPasscodes(
-          widget.token,
-          widget.lockId,
+          token,
+          widget.keyData.lockInfo.lockId,
         );
       } else {
         passcodes = await bluetoothService.getAllPasscodes(
@@ -121,7 +121,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
       } else {
         final now = DateTime.now();
         result = await wifiService.getRandomPasscode(
-          widget.token,
+          token,
           widget.keyData.lockInfo.lockId,
           4,
           'Eliminar todos',
@@ -136,7 +136,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
               result: result,
               startDate: now,
               endDate: now.add(const Duration(days: 1)),
-              lockAlias: widget.lockAlias,
+              keyData: widget.keyData,
               passcodeType: 4,
             ),
           ),
@@ -242,11 +242,8 @@ class _PasscodesScreen extends State<PasscodesScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => NewPasscodeScreen(
-                  lockId: widget.lockId,
-                  token: widget.token,
-                  lockData: widget.keyData.lockInfo.lockData,
+                  keyData: widget.keyData,
                   communicationMode: widget.communicationMode,
-                  lockAlias: widget.lockAlias,
                 ),
               ),
             );
@@ -306,10 +303,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
                                   MaterialPageRoute(
                                     builder: (_) => PasscodeDetailScreen(
                                       passcode: passcode,
-                                      token: widget.token,
-                                      lockId: widget.lockId,
-                                      lockAlias: widget.lockAlias,
-                                      lockData: widget.keyData.lockInfo.lockData,
+                                      keyData: widget.keyData,
                                       communicationMode: widget.communicationMode,
                                     ),
                                   ),

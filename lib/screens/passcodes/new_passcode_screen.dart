@@ -8,15 +8,15 @@ import 'package:api_app/screens/passcodes/created_passcode_screen.dart';
 import 'package:api_app/widgets/loading_overlay.dart';
 import 'package:api_app/helpers/error_helper.dart';
 import 'package:api_app/services/passcodes/bluetooth_passcode_service.dart';
+import 'package:api_app/models/ekey.dart';
+import 'package:api_app/services/auth_manager.dart';
 
 class NewPasscodeScreen extends StatefulWidget {
-  final int lockId;
-  final String token;
-  final String lockData;
+  final EKey keyData;
   final LockCommunicationMode communicationMode;
-  final String lockAlias;
 
-  const NewPasscodeScreen({super.key, required this.lockId, required this.token, required this.lockData, required this.communicationMode, required this.lockAlias});
+
+  const NewPasscodeScreen({super.key, required this.communicationMode, required this.keyData});
   
   @override
   State<NewPasscodeScreen> createState() => _NewPasscodesScreenState();
@@ -31,6 +31,7 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
   DateTime startDate = DateTime.now();
   DateTime endDate = DateTime.now().add(const Duration(days: 1));
   late PasscodesFormData formData;
+  late String token;
   List<int> get availableTypes {
     if (formData.isCustom) {
       return [2,3];
@@ -41,6 +42,12 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
   @override
   void initState() {
     super.initState();
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    token = await AuthManager.getToken() ?? '';
+
     formData = PasscodesFormData(
       isCustom: widget.communicationMode == LockCommunicationMode.bluetooth,
       type: 2,
@@ -48,6 +55,10 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
       startDate: DateTime.now(),
       endDate: DateTime.now().add(const Duration(days: 1)),
     );
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
 
@@ -495,13 +506,13 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
           passcode: formData.customCode!,
           startDate: startMills,
           endDate: endMills,
-          lockData: widget.lockData,
+          lockData: widget.keyData.lockInfo.lockData,
         );
       } else {
         if (formData.isCustom) {
           result = await wifiService.getCustomPasscode(
-            widget.token,
-            widget.lockId,
+            token,
+            widget.keyData.lockInfo.lockId,
             int.parse(formData.customCode!),
             formData.name,
             formData.type,
@@ -510,8 +521,8 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
           );
         } else {
           result = await wifiService.getRandomPasscode(
-            widget.token,
-            widget.lockId,
+            token,
+            widget.keyData.lockInfo.lockId,
             formData.type,
             formData.name,
             startMills,
@@ -530,7 +541,7 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
               result: result,
               startDate: formData.startDate,
               endDate: formData.endDate,
-              lockAlias: widget.lockAlias,
+              keyData: widget.keyData,
               passcodeType: formData.type,
             );
           },

@@ -44,7 +44,6 @@ class _HomeScreenState extends State<HomeScreen> {
         final key = keys[index];
         return LockCard(
           keyData: key,
-          token: token,
           onTap: () {
             showMoveLockDialog(key);
           },
@@ -53,19 +52,29 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> initialize() async {
+    token = await AuthManager.getToken() ?? '';
+
+    await loadGroups();
+
+    initialized = true;
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!initialized) {
-      token = ModalRoute.of(context)!.settings.arguments as String;
-      loadGroups();
-      initialized = true;
+      initialize();
     }
   }
 
   Future<void> loadGroups() async {
     groups = await GroupService().getGroups(token);
     allKeys = await EKeyService().getEKeys(token);
+    AuthManager.setGroups(groups);
+    AuthManager.setEKeys(allKeys);
+    print('AUTH GROUPS: ${AuthManager.getGroups().length}');
+    print('AUTH KEYS: ${AuthManager.getEKeys().length}');
     setState(() {
       isLoading = false;
     });
