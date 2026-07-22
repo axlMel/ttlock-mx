@@ -71,10 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> loadGroups() async {
     groups = await GroupService().getGroups(token);
     allKeys = await EKeyService().getEKeys(token);
-    AuthManager.setGroups(groups);
-    AuthManager.setEKeys(allKeys);
-    print('AUTH GROUPS: ${AuthManager.getGroups().length}');
-    print('AUTH KEYS: ${AuthManager.getEKeys().length}');
+    AuthManager.saveGroups(groups);
+    AuthManager.saveEKeys(allKeys);
     setState(() {
       isLoading = false;
     });

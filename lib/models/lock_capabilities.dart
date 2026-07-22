@@ -16,4 +16,11 @@ class LockCapabilities {
       keyboardPwdVersion: json['keyboardPwdVersion'] ?? 0,
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'featureValue': featureValue,
+      'remoteEnable': remoteEnable,
+      'keyboardPwdVersion': keyboardPwdVersion,
+    };
+  }
 }

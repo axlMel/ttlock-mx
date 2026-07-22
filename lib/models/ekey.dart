@@ -32,4 +32,16 @@ class EKey {
       capabilities: LockCapabilities.fromJson(json),
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'keyId': keyId,
+      'userType': userType,
+      'groupId': groupId,
+      'groupName': groupName,
+
+      ...lockInfo.toJson(),
+      ...lockState.toJson(),
+      ...capabilities.toJson(),
+    };
+  }
 }

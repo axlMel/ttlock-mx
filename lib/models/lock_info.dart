@@ -22,4 +22,13 @@ class LockInfo {
       lockData: json['lockData'] ?? '',
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'lockId': lockId,
+      'lockAlias': lockAlias,
+      'lockMac': lockMac,
+      'lockName': lockName,
+      'lockData': lockData,
+    };
+  }
 }

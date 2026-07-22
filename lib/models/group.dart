@@ -13,4 +13,10 @@ class Group {
       groupName: json['groupName'] ?? 'Sin nombre',
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'groupId': groupId,
+      'groupName': groupName,
+    };
+  }
 }

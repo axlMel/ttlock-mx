@@ -40,6 +40,7 @@ dependencies:
   flutter_secure_storage: ^10.1.0
   google_fonts: ^6.2.1
   share_plus: ^11.0.0
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
