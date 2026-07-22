@@ -29,7 +29,7 @@ class AuthManager {
   // Ekeys
   static Future<void> saveEKeys(List<EKey> keys) async {
     eKeys = keys;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = SharedPreferencesAsync();
     final jsonList = keys
         .map((e) => jsonEncode(e.toJson()))
         .toList();
@@ -37,12 +37,28 @@ class AuthManager {
     print('AUTH EKEYS: ${keys.length}');
   }
 
+  static Future<void> updateEKey(EKey updatedKey) async {
+    final index = eKeys.indexWhere(
+      (key) => key.keyId == updatedKey.keyId,
+    );
+
+    if (index == -1) {
+      return;
+    }
+
+    eKeys[index] = updatedKey;
+
+    await saveEKeys(eKeys);
+
+    print('AUTH EKEY ACTUALIZADA: ${updatedKey.lockInfo.lockAlias}');
+  }
+
   static Future<List<EKey>> getEKeys() async {
     if (eKeys.isNotEmpty) {
       return eKeys;
     }
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(eKeysKey);
+    final prefs = SharedPreferencesAsync();
+    final list = await prefs.getStringList(eKeysKey);
     if (list == null) {
       return [];
     }
@@ -56,7 +72,7 @@ class AuthManager {
   // Groups
   static Future<void> saveGroups(List<Group> newGroups) async {
     groups = newGroups;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = SharedPreferencesAsync();
     final jsonList = newGroups
         .map((e) => jsonEncode(e.toJson()))
         .toList();
@@ -68,8 +84,8 @@ class AuthManager {
     if (groups.isNotEmpty) {
       return groups;
     }
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(groupsKey);
+    final prefs = SharedPreferencesAsync();
+    final list = await prefs.getStringList(groupsKey);
     if (list == null) {
       return [];
     }
@@ -86,7 +102,7 @@ class AuthManager {
     eKeys.clear();
     groups.clear();
     await storage.delete(key: tokenKey);
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = SharedPreferencesAsync();
     await prefs.remove(eKeysKey);
     await prefs.remove(groupsKey);
     print('TOKEN ELIMINADO');

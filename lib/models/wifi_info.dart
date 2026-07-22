@@ -12,7 +12,6 @@ class WifiInfo {
     required this.isOnline,
     required this.powerSavingMode,
   });
-
   factory WifiInfo.fromJson(Map<String, dynamic> json) {
     return WifiInfo(
       networkName: json['networkName'] ?? '',
@@ -21,5 +20,14 @@ class WifiInfo {
       isOnline: json['isOnline'] == 1 || json['isOnline'] == true,
       powerSavingMode: json['powerSavingMode'] ?? 0,
     );
+  }
+  Map<String,dynamic> toJson() {
+    return {
+      'networkName': networkName,
+      'wifiMac': wifiMac,
+      'rssiGrade': rssiGrade,
+      'isOnline': isOnline,
+      'powerSavingMode': powerSavingMode,
+    };
   }
 }

@@ -29,7 +29,6 @@ class _SplashScreenState extends State<SplashScreen> {
       Navigator.pushReplacementNamed(
         context,
         '/home',
-        arguments: token,
       );
     } else {
       print('❌ SIN SESIÓN');

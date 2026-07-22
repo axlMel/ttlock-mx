@@ -28,6 +28,22 @@ class _LockCardState extends State<LockCard> {
     }
     return Colors.red;
   }
+  Color getStatusColor() {
+    if (widget.keyData.wifiInfo == null) {
+      return Colors.grey;
+    }
+    return widget.keyData.wifiInfo!.isOnline
+        ? Colors.green
+        : Colors.red;
+  }
+  String getStatusText() {
+    if (widget.keyData.wifiInfo == null) {
+      return 'Desconocido';
+    }
+    return widget.keyData.wifiInfo!.isOnline
+        ? 'Online'
+        : 'Offline';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +69,8 @@ class _LockCardState extends State<LockCard> {
               isPressed = false;
             });
           },
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => LockManagementScreen(
@@ -62,6 +78,10 @@ class _LockCardState extends State<LockCard> {
                 ),
               ),
             );
+
+            if (!mounted) return;
+
+            setState(() {});
           },
 
           child: AnimatedContainer(
@@ -143,17 +163,16 @@ class _LockCardState extends State<LockCard> {
                       width: 8,
                       height: 8,
 
-                      decoration: const BoxDecoration(
-                        color: Colors.green,
+                      decoration: BoxDecoration(
+                        color: getStatusColor(),
                         shape: BoxShape.circle,
                       ),
                     ),
 
                     const SizedBox(width: 6),
 
-                    const Text(
-                      'Online',
-
+                    Text(
+                      getStatusText(),
                       style: TextStyle(
                         fontSize: 10,
                         color: AppColors.textSecondary,

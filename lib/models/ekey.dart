@@ -1,6 +1,7 @@
 import 'lock_info.dart';
 import 'lock_state.dart';
 import 'lock_capabilities.dart';
+import 'wifi_info.dart';
 
 class EKey {
   final int keyId;
@@ -10,6 +11,7 @@ class EKey {
   final LockInfo lockInfo;
   final LockState lockState;
   final LockCapabilities capabilities;
+  WifiInfo? wifiInfo;
 
   EKey({
     required this.keyId,
@@ -19,6 +21,7 @@ class EKey {
     required this.lockInfo,
     required this.lockState,
     required this.capabilities,
+    this.wifiInfo,
   });
 
   factory EKey.fromJson(Map<String, dynamic> json) {
@@ -30,6 +33,7 @@ class EKey {
       lockInfo: LockInfo.fromJson(json),
       lockState: LockState.fromJson(json),
       capabilities: LockCapabilities.fromJson(json),
+      wifiInfo: json['wifiInfo'] != null ? WifiInfo.fromJson(json['wifiInfo']) : null,
     );
   }
   Map<String, dynamic> toJson() {
@@ -42,6 +46,7 @@ class EKey {
       ...lockInfo.toJson(),
       ...lockState.toJson(),
       ...capabilities.toJson(),
+      'wifiInfo': wifiInfo?.toJson(),
     };
   }
 }

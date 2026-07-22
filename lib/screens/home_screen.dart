@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:api_app/widgets/lock_card.dart';
 import 'package:flutter/material.dart';
 import '../models/group.dart';
@@ -54,9 +56,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> initialize() async {
     token = await AuthManager.getToken() ?? '';
-
-    await loadGroups();
-
+    groups = await AuthManager.getGroups();
+    allKeys = await AuthManager.getEKeys();
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+    // Sincronizar después
+    unawaited(loadGroups());
     initialized = true;
   }
 
@@ -69,13 +77,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> loadGroups() async {
-    groups = await GroupService().getGroups(token);
-    allKeys = await EKeyService().getEKeys(token);
-    AuthManager.saveGroups(groups);
-    AuthManager.saveEKeys(allKeys);
-    setState(() {
-      isLoading = false;
-    });
+    try {
+      final newGroups = await GroupService().getGroups(token);
+      final newKeys = await EKeyService().getEKeys(token);
+      groups = newGroups;
+      allKeys = newKeys;
+      await AuthManager.saveGroups(newGroups);
+      await AuthManager.saveEKeys(newKeys);
+      if (!mounted) return;
+      setState(() {});
+    } catch (e) {
+      debugPrint('ERROR SINCRONIZANDO HOME: $e');
+    }
   }
 
   Future<void> showCreateGroupDialog() async {
@@ -314,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // HEADER
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+                        padding: const EdgeInsets.fromLTRB(24, 10, 24, 6),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -324,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'GTLocks',
+                                    'GTLock',
                                     style: TextStyle(
                                       fontSize: 32,
                                       fontWeight: FontWeight.bold,
@@ -344,7 +357,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
 
-                            Column(
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 GestureDetector(
                                   onTap: showCreateGroupDialog,
@@ -371,10 +385,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 10),
+                                const SizedBox(width: 10),
                                 GestureDetector(
                                   onTap: logout,
-
                                   child: Container(
                                     width: 58,
                                     height: 58,
@@ -404,7 +417,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 10),
 
                       // LISTA
                       Expanded(

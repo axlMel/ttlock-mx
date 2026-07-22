@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/ekey.dart';
-import '../models/wifi_info.dart';
 import '../theme/app_colors.dart';
 import '../services/bluetooth_lock_service.dart';
 import '../services/wifi_lock_service.dart';
@@ -22,26 +21,35 @@ class LockManagementScreen extends StatefulWidget {
 
 class _LockManagementScreenState extends State<LockManagementScreen> {
   bool isRefreshing = false;
-  WifiInfo? wifiInfo;
   bool isLoadingWifi = true;
   bool isUnlocking = false;
   final BluetoothLockService bluetoothService = BluetoothLockService();
   final WifiLockService wifiService = WifiLockService();
   late String token;
 
-  String lastSync = 'Hace 2 min';
+  DateTime? lastSync;
   LockCommunicationMode selectedMode = LockCommunicationMode.wifi;
 
   Future<void> loadWifiInfo() async {
-    final result = await WifiLockService().getWifiDetails(
-      token,
-      widget.keyData.lockInfo.lockId,
-    );
-    if (!mounted) return;
-    setState(() {
-      wifiInfo = result;
-      isLoadingWifi = false;
-    });
+    try {
+      final result = await wifiService.getWifiDetails(
+        token,
+        widget.keyData.lockInfo.lockId,
+      );
+      widget.keyData.wifiInfo = result;
+      await AuthManager.updateEKey(widget.keyData);
+      if (!mounted) return;
+      setState(() {
+        isLoadingWifi = false;
+        lastSync = DateTime.now();;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoadingWifi = false;
+      });
+    }
   }
 
   @override
@@ -58,18 +66,28 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
     setState(() {
       isRefreshing = true;
     });
-
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() {
-      isRefreshing = false;
-    });
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Estado actualizado')));
+    try {
+      await loadWifiInfo();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Estado actualizado'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isRefreshing = false;
+        });
+      }
+    }
   }
 
   Future<void> selectBluetoothMode() async {
@@ -316,7 +334,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                 ),
 
                                 decoration: BoxDecoration(
-                                  color: (wifiInfo?.isOnline ?? false)
+                                  color: (widget.keyData.wifiInfo?.isOnline ?? false)
                                       ? Colors.green.withOpacity(0.10)
                                       : Colors.red.withOpacity(0.10),
 
@@ -330,7 +348,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                       width: 8,
                                       height: 8,
                                       decoration: BoxDecoration(
-                                        color: (wifiInfo?.isOnline ?? false)
+                                        color: (widget.keyData.wifiInfo?.isOnline ?? false)
                                             ? Colors.green
                                             : Colors.red,
                                         shape: BoxShape.circle,
@@ -340,12 +358,12 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                     const SizedBox(width: 8),
 
                                     Text(
-                                      (wifiInfo?.isOnline ?? false)
+                                      (widget.keyData.wifiInfo?.isOnline ?? false)
                                           ? 'Online'
                                           : 'Offline',
 
                                       style: TextStyle(
-                                        color: (wifiInfo?.isOnline ?? false)
+                                        color: (widget.keyData.wifiInfo?.isOnline ?? false)
                                             ? Colors.green
                                             : Colors.red,
                                         fontWeight: FontWeight.bold,
@@ -488,7 +506,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                 const SizedBox(width: 6),
 
                                 Text(
-                                  lastSync,
+                                  lastSync == null ? 'Sin sincronizar' : 'Actualizado ${TimeOfDay.fromDateTime(lastSync!).format(context)}',
                                   style: const TextStyle(
                                     color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w500,
@@ -507,7 +525,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
 
                                 Expanded(
                                   child: Text(
-                                    wifiInfo?.networkName ?? 'Sin WiFi',
+                                    widget.keyData.wifiInfo?.networkName ?? 'Sin WiFi',
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.right,
                                     style: const TextStyle(
