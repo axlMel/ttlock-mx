@@ -2,6 +2,7 @@ import 'package:api_app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/auth_manager.dart';
+import '../helpers/error_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,35 +23,39 @@ class _LoginScreenState extends State<LoginScreen>
 
   void login() async {
     print("🔥 CLICK LOGIN");
-
     setState(() {
       isLoading = true;
     });
-
     try {
       final token = await authService.login(
         usernameController.text,
         passwordController.text,
       );
-
       print("✅ TOKEN: $token");
-
+      if (!mounted) return;
+      await AuthManager.saveToken(token);
       setState(() {
         isLoading = false;
       });
-
-      if (token != null) {
-        await AuthManager.saveToken(token);
-        Navigator.pushReplacementNamed(context, '/home', arguments: token);
-      } else {
-        print("❌ LOGIN FALLÓ");
-      }
+      Navigator.pushReplacementNamed(
+        context,
+        '/home',
+        arguments: token,
+      );
     } catch (e) {
-      print("💥 ERROR: $e");
-
-      setState(() {
-        isLoading = false;
-      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHelper.parse(e)),
+        ),
+      );
+    }
+    finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 

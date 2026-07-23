@@ -6,6 +6,7 @@ import '../services/wifi_lock_service.dart';
 import 'package:api_app/screens/passcodes/passcodes_screen.dart';
 import '../models/lock_communication_mode.dart';
 import '../services/auth_manager.dart';
+import '../helpers/error_helper.dart';
 
 class LockManagementScreen extends StatefulWidget {
   final EKey keyData;
@@ -44,8 +45,12 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
         lastSync = DateTime.now();;
       });
     } catch (e) {
-      if (!mounted) return;
-
+    if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHelper.parse(e)),
+        ),
+      );
       setState(() {
         isLoadingWifi = false;
       });
@@ -128,35 +133,33 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
     setState(() {
       isUnlocking = true;
     });
-    await bluetoothService.unlock(
-      lockData: widget.keyData.lockInfo.lockData,
-      onSuccess: (lockTime, electricQuantity, uniqueId, lockData) {
-        if (!mounted) return;
+    try {
+      final result = await bluetoothService.unlock(
+        lockData: widget.keyData.lockInfo.lockData,
+      );
+      widget.keyData.lockState.electricQuantity = result['electricQuantity'];
+      widget.keyData.lockInfo.lockData = result['lockData'];
+      await AuthManager.updateEKey(widget.keyData);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chapa abierta por Bluetooth'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHelper.parse(e)),
+        ),
+      );
+    } finally {
+      if (mounted) {
         setState(() {
           isUnlocking = false;
         });
-        print('SUCCESS');
-        print('LOCK TIME => $lockTime');
-        print('BATTERY => $electricQuantity');
-        print('UNIQUE ID => $uniqueId');
-        print('LOCK DATA => $lockData');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Chapa abierta por Bluetooth')),
-        );
-      },
-      onError: (errorCode, errorMsg) {
-        if (!mounted) return;
-        setState(() {
-          isUnlocking = false;
-        });
-        print('Error code = $errorCode');
-        print('Error msg = $errorMsg');
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMsg)));
-      },
-    );
+      }
+    }
   }
 
   Future<void> unlockSelectedMode() async {
@@ -185,7 +188,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error Wifi: $e')));
+      ).showSnackBar(SnackBar(content: Text(ErrorHelper.parse(e))));
     } finally {
       setState(() {
         isUnlocking = false;

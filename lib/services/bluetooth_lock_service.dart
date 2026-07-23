@@ -15,11 +15,30 @@ class BluetoothLockService {
     return state == TTBluetoothState.turnOn;
   }
 
-  Future<void> unlock({
+  Future<Map<String, dynamic>> unlock({
     required String lockData,
-    required TTControlLockCallback onSuccess,
-    required TTFailedCallback onError,
-  }) async {
-    TTLock.controlLock(lockData, TTControlAction.unlock, onSuccess, onError);
+  }) {
+    final completer = Completer<Map<String, dynamic>>();
+
+    TTLock.controlLock(
+      lockData,
+      TTControlAction.unlock,
+      (
+        int lockTime,
+        int electricQuantity,
+        int uniqueId,
+        String newLockData,
+      ) {
+        completer.complete({
+          'electricQuantity': electricQuantity,
+          'lockData': newLockData,
+        });
+      },
+      (error, message) {
+        completer.completeError(error);
+      },
+    );
+
+    return completer.future;
   }
 }

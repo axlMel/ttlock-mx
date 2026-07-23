@@ -8,6 +8,7 @@ import '../services/auth_manager.dart';
 import '../services/group_service.dart';
 import '../services/ekey_service.dart';
 import '../theme/app_colors.dart';
+import 'package:api_app/helpers/error_helper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -87,6 +88,13 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       setState(() {});
     } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHelper.parse(e)),
+        ),
+      );
       debugPrint('ERROR SINCRONIZANDO HOME: $e');
     }
   }
@@ -104,8 +112,8 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('Crear grupo'),
               content: SizedBox(
                 width: 400,
+                height: 450,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
                       controller: controller,
@@ -122,25 +130,31 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    ...getUngroupedKeys().map((key) {
-                      final isSelected = selectedKeys.contains(key);
-                      return CheckboxListTile(
-                        value: isSelected,
-                        title: Text(key.lockInfo.lockAlias),
-                        subtitle: Text(
-                          'Batería ${key.lockState.electricQuantity}%',
-                        ),
-                        onChanged: (value) {
-                          setModalState(() {
-                            if (value == true) {
-                              selectedKeys.add(key);
-                            } else {
-                              selectedKeys.remove(key);
-                            }
-                          });
-                        },
-                      );
-                    }),
+
+                    Expanded(
+                      child: ListView(
+                        children: getUngroupedKeys().map((key) {
+                          final isSelected = selectedKeys.contains(key);
+
+                          return CheckboxListTile(
+                            value: isSelected,
+                            title: Text(key.lockInfo.lockAlias),
+                            subtitle: Text(
+                              'Batería ${key.lockState.electricQuantity}%',
+                            ),
+                            onChanged: (value) {
+                              setModalState(() {
+                                if (value == true) {
+                                  selectedKeys.add(key);
+                                } else {
+                                  selectedKeys.remove(key);
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ),
                   ],
                 ),
               ),

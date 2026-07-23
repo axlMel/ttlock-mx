@@ -41,15 +41,11 @@ class AuthManager {
     final index = eKeys.indexWhere(
       (key) => key.keyId == updatedKey.keyId,
     );
-
     if (index == -1) {
       return;
     }
-
     eKeys[index] = updatedKey;
-
     await saveEKeys(eKeys);
-
     print('AUTH EKEY ACTUALIZADA: ${updatedKey.lockInfo.lockAlias}');
   }
 

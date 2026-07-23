@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
@@ -5,7 +7,7 @@ import 'package:crypto/crypto.dart';
 class AuthService {  
   final String baseUrl = 'https://euapi.ttlock.com';
 
-  Future<String?> login(String username, String password) async{
+  Future<String> login(String username, String password) async {
     print("INICIADNO REQUEST");
     
     final url = Uri.parse('$baseUrl/oauth2/token');
@@ -32,15 +34,24 @@ class AuthService {
         ).timeout(const Duration(seconds: 45));
         print("STATUS: ${response.statusCode}");
         print("BODY: ${response.body}");
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          return data['access_token'];
+        if (response.statusCode != 200) {
+          throw Exception('HTTP ${response.statusCode}');
         }
-      } catch (e) {
-        print('Intento ${i + 1} falló: $e');
+        final data = jsonDecode(response.body);
+        if (data.containsKey('errcode') && data['errcode'] != 0) {
+          throw Exception('${data['errmsg']} (${data['errcode']})');
+        }
+        return data['access_token'];
+      } 
+      on TimeoutException {
+        print('Timeout intento ${i + 1}');
       }
-      await Future.delayed(const Duration(seconds: 2));
+      on http.ClientException {
+        print('Error de conexión intento ${i + 1}');
+      }catch (e) {
+        rethrow;
+      }
     }
-    return null;
+    throw Exception('No fue posible conectar con el servidor');
   }
 }

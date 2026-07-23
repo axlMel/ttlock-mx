@@ -1,5 +1,5 @@
 class LockState {
-  final int electricQuantity;
+  int electricQuantity;
   final bool isOnline;
   final int passageMode;
 

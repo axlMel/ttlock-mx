@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/group.dart';
+import 'dart:async';
 
 class GroupService {
   final String baseUrl = 'https://euapi.ttlock.com';
@@ -28,17 +29,30 @@ class GroupService {
         print('GROUP STATUS: ${response.statusCode}');
         print('GROUP BODY: ${response.body}');
 
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          final List groupsJson = data['list'] ?? [];
-          return groupsJson.map((json) => Group.fromJson(json)).toList();
+        if (response.statusCode != 200) {
+          throw Exception('HTTP ${response.statusCode}');
         }
-      } catch (e) {
-        print('Intento groups ${i + 1} falló: $e');
+
+        final data = jsonDecode(response.body);
+
+        if (data.containsKey('errcode') && data['errcode'] != 0) {
+          throw Exception('${data['errmsg']} (${data['errcode']})');
+        }
+
+        final List groupsJson = data['list'] ?? [];
+        return groupsJson.map((json) => Group.fromJson(json)).toList();
+      } on TimeoutException {
+        print('Timeout intento ${i + 1}');
+      }
+      on http.ClientException {
+        print('Error de conexión intento ${i + 1}');
+      }
+      catch (e) {
+        rethrow;
       }
       await Future.delayed(const Duration(seconds: 2));
     }
-    return [];
+    throw Exception('No fue posible conectar con el servidor');
   }
 
   Future<Map<String, dynamic>> createGroup(
@@ -65,22 +79,29 @@ class GroupService {
       print('CREATE GROUP STATUS: ${response.statusCode}');
       print('CREATE GROUP BODY: ${response.body}');
       print('CREATE GROUP NAME: ${groupName}');
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data['errcode'] != null) {
-          return {'success': false, 'message': data['errmsg']};
-        }
-
-        return {'success': true, 'groupId': data['groupId']};
+      if (response.statusCode != 200) {
+        throw Exception('HTTP ${response.statusCode}');
       }
-    } catch (e) {
-      print('ERROR CREANDO GRUPO: $e');
 
-      return {'success': false, 'message': 'Error de conexión'};
+      final data = jsonDecode(response.body);
+
+      if (data.containsKey('errcode') && data['errcode'] != 0) {
+        throw Exception('${data['errmsg']} (${data['errcode']})');
+      }
+
+      return {
+        'success': true,
+        'groupId': data['groupId'],
+      };
+    } on TimeoutException {
+      throw Exception('No fue posible conectar con el servidor');
     }
-
-    return {'success': false, 'message': 'No se pudo conectar'};
+    on http.ClientException {
+      throw Exception('No fue posible conectar con el servidor');
+    }
+    catch (e) {
+      rethrow;
+    }
   }
 
   Future<bool> setLockGroup(String token, int lockId, int groupId) async {
@@ -105,15 +126,25 @@ class GroupService {
             .timeout(const Duration(seconds: 45));
         print('Status de grupo seteado: ${response.statusCode}');
         print('Cuerpo de grupo seteado: ${response.body}');
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          return data['errcode'] == 0;
+        if (response.statusCode != 200) {
+          throw Exception('HTTP ${response.statusCode}');
         }
-      } catch (e) {
-        print('Error moviendo chapa: $e');
+        final data = jsonDecode(response.body);
+        if (data.containsKey('errcode') && data['errcode'] != 0) {
+          throw Exception('${data['errmsg']} (${data['errcode']})');
+        }
+        return true;
+      } on TimeoutException {
+        print('Timeout intento ${i + 1}');
+      }
+      on http.ClientException {
+        print('Error de conexión intento ${i + 1}');
+      }
+      catch (e) {
+        rethrow;
       }
       await Future.delayed(const Duration(seconds: 2));
     }
-    return false;
+    throw Exception('No fue posible conectar con el servidor');
   }
 }
