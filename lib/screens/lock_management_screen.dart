@@ -7,6 +7,8 @@ import 'package:api_app/screens/passcodes/passcodes_screen.dart';
 import '../models/lock_communication_mode.dart';
 import '../services/auth_manager.dart';
 import '../helpers/error_helper.dart';
+import 'wifi_configuration_screen.dart';
+import 'package:ttlock_flutter/ttlock.dart';
 
 class LockManagementScreen extends StatefulWidget {
   final EKey keyData;
@@ -505,27 +507,21 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                   size: 18,
                                   color: AppColors.textSecondary,
                                 ),
-
                                 const SizedBox(width: 6),
-
                                 Text(
-                                  lastSync == null ? 'Sin sincronizar' : 'Actualizado ${TimeOfDay.fromDateTime(lastSync!).format(context)}',
+                                  lastSync == null ? 'Sin sincronizar' : '${TimeOfDay.fromDateTime(lastSync!).format(context)}',
                                   style: const TextStyle(
                                     color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-
                                 const Spacer(),
-
                                 const Icon(
                                   Icons.wifi_rounded,
                                   size: 18,
                                   color: AppColors.primary,
                                 ),
-
                                 const SizedBox(width: 6),
-
                                 Expanded(
                                   child: Text(
                                     widget.keyData.wifiInfo?.networkName ?? 'Sin WiFi',
@@ -536,10 +532,35 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                     ),
                                   ),
                                 ),
-
                                 const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () async {
+                                    final bluetoothEnabled =
+                                        await bluetoothService.isBluetoothEnabled();
 
-                                const Icon(Icons.settings_rounded, size: 18),
+                                    if (!bluetoothEnabled) {
+                                      await showBluetoothDisabledDialog();
+                                      return;
+                                    }
+
+                                    final result = await Navigator.push<TTWifiInfoModel>(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => WifiConfigurationScreen(
+                                          keyData: widget.keyData,
+                                        ),
+                                      ),
+                                    );
+
+                                    if (result != null) {
+                                      await loadWifiInfo();
+                                    }
+                                  },
+                                  child: const Icon(
+                                    Icons.settings_rounded,
+                                    size: 18,
+                                  ),
+                                )
                               ],
                             ),
                           ),

@@ -4,6 +4,7 @@ class WifiInfo {
   final int rssiGrade;
   final bool isOnline;
   final int powerSavingMode;
+  final int wifiRssi;
 
   WifiInfo({
     required this.networkName,
@@ -11,6 +12,7 @@ class WifiInfo {
     required this.rssiGrade,
     required this.isOnline,
     required this.powerSavingMode,
+    required this.wifiRssi,
   });
   factory WifiInfo.fromJson(Map<String, dynamic> json) {
     return WifiInfo(
@@ -19,6 +21,7 @@ class WifiInfo {
       rssiGrade: json['rssiGrade'] ?? 0,
       isOnline: json['isOnline'] == 1 || json['isOnline'] == true,
       powerSavingMode: json['powerSavingMode'] ?? 0,
+      wifiRssi: json['wifiRssi'] ?? 0,
     );
   }
   Map<String,dynamic> toJson() {
@@ -28,6 +31,7 @@ class WifiInfo {
       'rssiGrade': rssiGrade,
       'isOnline': isOnline,
       'powerSavingMode': powerSavingMode,
+      'wifiRssi': wifiRssi
     };
   }
 }
