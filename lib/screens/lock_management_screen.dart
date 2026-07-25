@@ -3,12 +3,14 @@ import '../models/ekey.dart';
 import '../theme/app_colors.dart';
 import '../services/bluetooth_lock_service.dart';
 import '../services/wifi_lock_service.dart';
-import 'package:api_app/screens/passcodes/passcodes_screen.dart';
 import '../models/lock_communication_mode.dart';
 import '../services/auth_manager.dart';
 import '../helpers/error_helper.dart';
 import 'wifi_configuration_screen.dart';
 import 'package:ttlock_flutter/ttlock.dart';
+
+import 'package:api_app/screens/passcodes/passcodes_screen.dart';
+import 'package:api_app/screens/qrcodes/qrcodes_screen.dart';
 
 class LockManagementScreen extends StatefulWidget {
   final EKey keyData;
@@ -589,13 +591,6 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
 
                           children: [
                             buildFeatureCard(
-                              icon: Icons.key_rounded,
-                              title: 'eKeys',
-                              subtitle: 'Usuarios',
-                              onTap: () {},
-                            ),
-
-                            buildFeatureCard(
                               icon: Icons.pin,
                               title: 'PIN',
                               subtitle: 'Contraseñas',
@@ -611,6 +606,23 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                                 );
                               },
                             ),
+                            
+                            buildFeatureCard(
+                              icon: Icons.qr_code_2,
+                              title: 'QR',
+                              subtitle: 'Accesos por link',
+                              onTap: () {
+                                Navigator.push(
+                                  context, 
+                                  MaterialPageRoute(
+                                    builder: (_) => QrcodesScreen(
+                                      keyData: widget.keyData,
+                                      communicationMode: selectedMode
+                                    )
+                                  ),
+                                );
+                              },
+                            ),
 
                             buildFeatureCard(
                               icon: Icons.credit_card,
@@ -621,9 +633,9 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                             ),
 
                             buildFeatureCard(
-                              icon: Icons.qr_code_2,
-                              title: 'QR',
-                              subtitle: 'Accesos',
+                              icon: Icons.key_rounded,
+                              title: 'eKeys',
+                              subtitle: 'Usuarios',
                               onTap: () {},
                             ),
 
