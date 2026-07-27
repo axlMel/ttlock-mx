@@ -556,9 +556,11 @@ class _QrcodeDetailScreenState extends State<QrcodeDetailScreen> {
                       } else {
                         deleteQrcode();
                       }
+                      
                     },
                   ),
                 ),
+                const SizedBox(height: 20),
               ],
             ),
           ),

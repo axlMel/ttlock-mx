@@ -11,6 +11,7 @@ import 'package:ttlock_flutter/ttlock.dart';
 
 import 'package:api_app/screens/passcodes/passcodes_screen.dart';
 import 'package:api_app/screens/qrcodes/qrcodes_screen.dart';
+import 'package:api_app/screens/records/records_screen.dart';
 
 class LockManagementScreen extends StatefulWidget {
   final EKey keyData;
@@ -597,7 +598,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                               title: 'PIN',
                               subtitle: 'Contraseñas',
                               onTap: () {
-                                 Navigator.push(
+                                Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => PasscodesScreen(
@@ -650,10 +651,20 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
 
                             buildFeatureCard(
                               icon: Icons.history,
-                              title: 'Logs',
-                              subtitle: 'Auditoría',
-                              enabled: false,
-                              onTap: () {},
+                              title: 'Registros',
+                              subtitle: 'Auditoría de uso',
+                              enabled: true,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => RecordsScreen(
+                                      keyData: widget.keyData,
+                                      communicationMode: selectedMode,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
 
                             buildFeatureCard(

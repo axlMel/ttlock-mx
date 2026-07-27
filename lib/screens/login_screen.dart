@@ -22,14 +22,30 @@ class _LoginScreenState extends State<LoginScreen>
   late Animation<double> animation;
 
   void login() async {
-    print("🔥 CLICK LOGIN");
+    if (usernameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ingrese el usuario'),
+        ),
+      );
+      return;
+    }
+
+    if (passwordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ingrese la contraseña'),
+        ),
+      );
+      return;
+    }
     setState(() {
       isLoading = true;
     });
     try {
       final token = await authService.login(
-        usernameController.text,
-        passwordController.text,
+        usernameController.text.toString(),
+        passwordController.text.toString(),
       );
       await AuthManager.saveToken(token);
       if (!mounted) return;
@@ -173,10 +189,18 @@ class _LoginScreenState extends State<LoginScreen>
                     ],
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      Center(
+                      child: Image.asset(
+                        'assets/icon/app_icon.png',
+                        height: 100,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                       Text(
-                        "SIGN IN",
+                        "LOGIN",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -287,7 +311,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   shadowColor: Colors.indigo,
                                 ),
                                 child: const Text(
-                                  'Login',
+                                  'Acceder',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
@@ -298,11 +322,32 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                       SizedBox(height: 20),
                       Center(
-                        child: Text(
-                          "Olvidaste tu contraseña?",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blueGrey,
+                        child: TextButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text('Cuestión de seguridad'),
+                                  content: const Text(
+                                    'Contacta a tu administrador de GlobalTrack para obtener una nueva contraseña.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Aceptar'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          child: const Text(
+                            '¿Olvidaste tu contraseña?',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.blueGrey,
+                            ),
                           ),
                         ),
                       ),

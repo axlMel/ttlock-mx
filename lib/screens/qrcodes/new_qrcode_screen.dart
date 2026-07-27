@@ -336,7 +336,8 @@ class _NewQrcodesScreenState extends State<NewQrcodeScreen>{
                         ),),
                         onPressed: createQrcode, 
                       ),
-                    )
+                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               )

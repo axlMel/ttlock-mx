@@ -90,7 +90,7 @@ class Qrcode {
       ' ${date.hour.toString().padLeft(2,'0')}:'
       '${date.minute.toString().padLeft(2,'0')}';
   }
-    String get typeName {
+  String get typeName {
     return QrcodeFormData.typeNames[
       type
     ] ?? 'Desconocido';
