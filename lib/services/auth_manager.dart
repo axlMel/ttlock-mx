@@ -28,13 +28,39 @@ class AuthManager {
 
   // Ekeys
   static Future<void> saveEKeys(List<EKey> keys) async {
+    if (eKeys.isEmpty) {
+      await getEKeys();
+    }
+
+    // Conservar información que el endpoint no devuelve
+    for (final newKey in keys) {
+
+      final oldIndex = eKeys.indexWhere(
+        (k) => k.keyId == newKey.keyId,
+      );
+
+      if (oldIndex == -1) {
+        continue;
+      }
+
+      final oldKey = eKeys[oldIndex];
+
+      newKey.wifiInfo = oldKey.wifiInfo;
+      newKey.lockState = oldKey.lockState;
+      newKey.lockInfo.lockData = oldKey.lockInfo.lockData;
+    }
+
     eKeys = keys;
+
     final prefs = SharedPreferencesAsync();
-    final jsonList = keys
+
+    final jsonList = eKeys
         .map((e) => jsonEncode(e.toJson()))
         .toList();
+
     await prefs.setStringList(eKeysKey, jsonList);
-    print('AUTH EKEYS: ${keys.length}');
+
+    print('AUTH EKEYS: ${eKeys.length}');
   }
 
   static Future<void> updateEKey(EKey updatedKey) async {
@@ -44,7 +70,14 @@ class AuthManager {
     if (index == -1) {
       return;
     }
-    eKeys[index] = updatedKey;
+    final current = eKeys[index];
+
+    current.wifiInfo = updatedKey.wifiInfo;
+    current.lockState = updatedKey.lockState;
+    current.lockInfo.lockData = updatedKey.lockInfo.lockData;
+    current.lockInfo.lockAlias = updatedKey.lockInfo.lockAlias;
+    current.groupId = updatedKey.groupId;
+
     await saveEKeys(eKeys);
     print('AUTH EKEY ACTUALIZADA: ${updatedKey.lockInfo.lockAlias}');
   }

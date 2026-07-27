@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return allKeys.where((k) => k.groupId == groupId).toList();
   }
 
-  Widget BuildLocksGrid(List<EKey> keys) {
+  Widget buildLocksGrid(List<EKey> keys) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -82,6 +82,17 @@ class _HomeScreenState extends State<HomeScreen> {
       final newGroups = await GroupService().getGroups(token);
       final newKeys = await EKeyService().getEKeys(token);
       groups = newGroups;
+      final cachedKeys = await AuthManager.getEKeys();
+
+      for (final newKey in newKeys) {
+        final cached = cachedKeys.firstWhere(
+          (e) => e.keyId == newKey.keyId,
+          orElse: () => newKey,
+        );
+
+        newKey.wifiInfo = cached.wifiInfo;
+      }
+
       allKeys = newKeys;
       await AuthManager.saveGroups(newGroups);
       await AuthManager.saveEKeys(newKeys);
@@ -450,7 +461,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
 
-                              BuildLocksGrid(getUngroupedKeys()),
+                              buildLocksGrid(getUngroupedKeys()),
                             ],
 
                             // GRUPOS
@@ -480,7 +491,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
 
-                                  BuildLocksGrid(groupKeys),
+                                  buildLocksGrid(groupKeys),
                                 ],
                               );
                             }),

@@ -83,6 +83,7 @@ class _LockCardState extends State<LockCard> {
 
             setState(() {});
           },
+          onLongPress: widget.onTap,
 
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 120),

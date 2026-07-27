@@ -66,5 +66,17 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- Permisos de Bluetooth para iOS -->
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>Esta aplicación requiere acceso a Bluetooth para conectarse y administrar las cerraduras inteligentes TTLock.</string>
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>Esta aplicación requiere acceso a Bluetooth para descubrir y emparejar cerraduras inteligentes cercanas.</string>
+
+    <!-- Permisos de Ubicación (Obligatorios en iOS para buscar dispositivos Bluetooth) -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Necesitamos tu ubicación para buscar y detectar dispositivos Bluetooth cercanos.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Necesitamos tu ubicación para buscar y detectar dispositivos Bluetooth cercanos incluso en segundo plano.</string>
+
 </dict>
 </plist>

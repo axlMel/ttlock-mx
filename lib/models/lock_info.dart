@@ -1,6 +1,6 @@
 class LockInfo {
   final int lockId;
-  final String lockAlias;
+  String lockAlias;
   final String lockMac;
   final String lockName;
   String lockData;

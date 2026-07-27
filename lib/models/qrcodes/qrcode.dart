@@ -95,4 +95,33 @@ class Qrcode {
       type
     ] ?? 'Desconocido';
   }
+  String get statusName {
+    switch (status) {
+      case 1:
+        return 'Activo';
+
+      case 2:
+        return 'Expirado';
+
+      case 3:
+        return 'Pendiente';
+
+      case 4:
+        return 'Eliminado';
+
+      default:
+        return 'Desconocido';
+    }
+  }
+
+  String get formattedCreateDate {
+    final date = DateTime.fromMillisecondsSinceEpoch(createDate);
+
+    return
+        '${date.day}/'
+        '${date.month}/'
+        '${date.year}'
+        ' ${date.hour.toString().padLeft(2, '0')}:'
+        '${date.minute.toString().padLeft(2, '0')}';
+  }
 }

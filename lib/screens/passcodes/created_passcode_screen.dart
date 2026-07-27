@@ -159,12 +159,7 @@ class CreatedPasscodeScreen extends StatelessWidget {
                   ),
 
                   onPressed: () {
-                    if (passcodeType == 4) {
-                      Navigator.pop(context, true);
-                    } else {
-                      Navigator.pop(context, true);
-                      Navigator.pop(context, true);
-                    }
+                    Navigator.pop(context, true);
                   },
                 ),
               ),

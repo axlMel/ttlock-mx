@@ -45,31 +45,49 @@ class _PasscodesScreen extends State<PasscodesScreen> {
   }
 
   Future<void> loadPasscodes() async {
+    if (mounted) {
+      setState(() {
+        isLoading = true;
+      });
+    }
     try {
       if (widget.communicationMode == LockCommunicationMode.wifi) {
-        passcodes = await wifiService.getAllPasscodes(
+        final data = await wifiService.getAllPasscodes(
           token,
           widget.keyData.lockInfo.lockId,
         );
+
+        if (!mounted) return;
+
+        setState(() {
+          passcodes = data;
+          isLoading = false;
+        });
       } else {
-        passcodes = await bluetoothService.getAllPasscodes(
+        final data = await bluetoothService.getAllPasscodes(
           lockData: widget.keyData.lockInfo.lockData,
         );
+
+        if (!mounted) return;
+
+        setState(() {
+          passcodes = data;
+          isLoading = false;
+        });
       }
       if (!mounted) return;
+    } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         isLoading = false;
       });
-    } catch (e) {
-      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(ErrorHelper.parse(e)),
         ),
       );
-      setState(() {
-        isLoading = false;
-      });
     }
   }
 
@@ -129,7 +147,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
           now.add(const Duration(days: 1)).millisecondsSinceEpoch,
         );
         if (!mounted) return;
-        Navigator.push(
+        final refresh = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => CreatedPasscodeScreen(
@@ -141,6 +159,11 @@ class _PasscodesScreen extends State<PasscodesScreen> {
             ),
           ),
         );
+
+        if (refresh == true) {
+          await loadPasscodes();
+        }
+
         return;
       }
       if (!mounted) return;
@@ -206,7 +229,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
             child: TextField(
               onChanged: (value) {
                 setState(() {
-                  searchText=value.toLowerCase();
+                  searchText = value.trim().toLowerCase();
                 });
               },
 
@@ -246,7 +269,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
               ),
             );
             if (refresh == true) {
-              loadPasscodes();
+              await loadPasscodes();
             }
           },
           child: const Icon(Icons.add),
@@ -307,7 +330,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
                                   ),
                                 );
                                 if (refresh == true) {
-                                  loadPasscodes();
+                                  await loadPasscodes();
                                 }
                               },
                               child: ListTile(

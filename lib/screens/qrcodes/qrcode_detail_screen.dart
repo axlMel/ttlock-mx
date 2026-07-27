@@ -28,10 +28,38 @@ class _QrcodeDetailScreenState extends State<QrcodeDetailScreen> {
   WifiQrcodeService wifiService = WifiQrcodeService();
   bool isEditing = false;
   bool isSaving = false;
+  bool hasChanges = false;
   late TextEditingController nameController;
   late TextEditingController codeController;
   late QrcodeFormData formData;
   late String token;
+  String weekDayName(int day) {
+    switch (day) {
+      case 1:
+        return 'Lunes';
+      case 2:
+        return 'Martes';
+      case 3:
+        return 'Miércoles';
+      case 4:
+        return 'Jueves';
+      case 5:
+        return 'Viernes';
+      case 6:
+        return 'Sábado';
+      case 7:
+        return 'Domingo';
+      default:
+        return '';
+    }
+  }
+
+  String formatMinutes(int minutes) {
+    final h = (minutes ~/ 60).toString().padLeft(2, '0');
+    final m = (minutes % 60).toString().padLeft(2, '0');
+
+    return '$h:$m';
+  }
 
   @override
   void initState() {
@@ -52,6 +80,14 @@ class _QrcodeDetailScreenState extends State<QrcodeDetailScreen> {
               widget.qrcode.endDate,
             ),
     );
+  }
+  String formatDate(DateTime date) {
+    return
+        '${date.day}/'
+        '${date.month}/'
+        '${date.year}'
+        ' ${date.hour.toString().padLeft(2, '0')}:'
+        '${date.minute.toString().padLeft(2, '0')}';
   }
   Future<void> initialize() async {
     token = await AuthManager.getToken() ?? '';
@@ -152,6 +188,8 @@ class _QrcodeDetailScreenState extends State<QrcodeDetailScreen> {
         widget.qrcode.endDate =
             formData.endDate?.millisecondsSinceEpoch ?? 0;
         isEditing = false;
+        hasChanges = true;
+        nameController.text = formData.name;
       });
       
       ScaffoldMessenger.of(
@@ -174,243 +212,357 @@ class _QrcodeDetailScreenState extends State<QrcodeDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LoadingOverlay(
-      isLoading: isSaving, 
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.pop(context,hasChanges);
+      },
+      child: LoadingOverlay(
+        isLoading: isSaving, 
+        child: Scaffold(
           backgroundColor: AppColors.background,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          title: const Text('Detalle del código'),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
-                elevation: 2,
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18)
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.qr_code_2, size: 60),
-                      const SizedBox(height: 20),
-                      SelectableText(
-                          widget.qrcode.link,
-                      ),
-                      const SizedBox(height: 20),
-                      if (!isEditing)
-                        Text(
-                          widget.qrcode.name,
-                          style: const TextStyle(fontSize: 18),
-                        )
-                      else
-                        TextField(
-                          controller: nameController,
-                          onChanged: (value) {
-                            formData.name = value;
-                          },
-                          decoration: buildInput('Nombre')
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context, hasChanges);
+              },
+            ),
+            title: const Text('Detalle del código'),
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Card(
+                  elevation: 2,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.qr_code_2, size: 60),
+                        const SizedBox(height: 20),
+                        SelectableText(
+                            widget.qrcode.link,
                         ),
-                    ],
+                        const SizedBox(height: 20),
+                        if (!isEditing)
+                          Text(
+                            widget.qrcode.name,
+                            style: const TextStyle(fontSize: 18),
+                          )
+                        else
+                          TextField(
+                            controller: nameController,
+                            onChanged: (value) {
+                              formData.name = value;
+                            },
+                            decoration: buildInput('Nombre')
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-              Card(
-                elevation: 2,
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
+                Card(
+                  elevation: 2,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
 
-                    ListTile(
-                      leading: Icon(
-                        Icons.category,
-                        color: AppColors.primary,
-                      ),
-                      title: const Text('Tipo'),
-                      subtitle: Text(
-                        widget.qrcode.typeName,
-                      ),
-                    ),
-
-                    Divider(
-                      height: 1,
-                      color: Colors.grey.shade300,
-                    ),
-
-                    if (!isEditing)
                       ListTile(
                         leading: Icon(
-                          Icons.calendar_today,
+                          Icons.category,
                           color: AppColors.primary,
                         ),
-                        title: const Text('Inicio'),
+                        title: const Text('Tipo'),
                         subtitle: Text(
-                          widget.qrcode.formattedStartDate,
-                        ),
-                      )
-                    else
-                      ListTile(
-                        leading: Icon(
-                          Icons.calendar_today,
-                          color: AppColors.primary,
-                        ),
-                        title: const Text('Inicio'),
-                        subtitle: Text(
-                          widget.qrcode.formattedStartDate,
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            Icons.edit_calendar,
-                            color: AppColors.primary,
-                          ),
-                          onPressed: selectStartDate,
+                          widget.qrcode.typeName,
                         ),
                       ),
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.shade300,
+                      ),
 
-                    if(formData.requiresEndDate)
-                    Divider(
-                      height:1,
-                      color: Colors.grey.shade300,
-                    ),
+                      ListTile(
+                        leading: Icon(
+                          Icons.verified,
+                          color: AppColors.primary,
+                        ),
+                        title: const Text('Estado'),
+                        subtitle: Text(widget.qrcode.statusName),
+                      ),
 
-                    if(formData.requiresEndDate)
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.shade300,
+                      ),
 
-                      if(!isEditing)
+                      ListTile(
+                        leading: Icon(
+                          Icons.person,
+                          color: AppColors.primary,
+                        ),
+                        title: const Text('Creado por'),
+                        subtitle: Text(widget.qrcode.creator),
+                      ),
+
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.shade300,
+                      ),
+
+                      ListTile(
+                        leading: Icon(
+                          Icons.schedule,
+                          color: AppColors.primary,
+                        ),
+                        title: const Text('Fecha de creación'),
+                        subtitle: Text(widget.qrcode.formattedCreateDate),
+                      ),
+
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.shade300,
+                      ),
+
+                      if (!isEditing)
                         ListTile(
                           leading: Icon(
-                            Icons.event_busy,
+                            Icons.calendar_today,
                             color: AppColors.primary,
                           ),
-                          title: const Text('Fin'),
+                          title: const Text('Inicio'),
                           subtitle: Text(
-                            widget.qrcode.formattedEndDate,
+                            widget.qrcode.formattedStartDate,
                           ),
                         )
                       else
                         ListTile(
                           leading: Icon(
-                            Icons.event_busy,
+                            Icons.calendar_today,
                             color: AppColors.primary,
                           ),
-                          title: const Text('Fin'),
+                          title: const Text('Inicio'),
                           subtitle: Text(
-                            widget.qrcode.formattedEndDate,
+                            isEditing
+                                ? formatDate(formData.startDate)
+                                : widget.qrcode.formattedStartDate,
                           ),
                           trailing: IconButton(
                             icon: Icon(
                               Icons.edit_calendar,
                               color: AppColors.primary,
                             ),
-                            onPressed: selectEndDate,
+                            onPressed: selectStartDate,
                           ),
                         ),
-                  ],
-                ),
-              ),
 
-              const SizedBox(height: 15),
-              SizedBox(
-                height: 55,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
+                      if(formData.requiresEndDate)
+                      Divider(
+                        height:1,
+                        color: Colors.grey.shade300,
+                      ),
+
+                      if(formData.requiresEndDate)
+
+                        if(!isEditing)
+                          ListTile(
+                            leading: Icon(
+                              Icons.event_busy,
+                              color: AppColors.primary,
+                            ),
+                            title: const Text('Fin'),
+                            subtitle: Text(
+                              widget.qrcode.formattedEndDate,
+                            ),
+                          )
+                        else
+                          ListTile(
+                            leading: Icon(
+                              Icons.event_busy,
+                              color: AppColors.primary,
+                            ),
+                            title: const Text('Fin'),
+                            subtitle: Text(
+                              isEditing
+                                  ? (formData.endDate == null
+                                        ? 'Sin fecha límite'
+                                        : formatDate(formData.endDate!))
+                                  : widget.qrcode.formattedEndDate,
+                            ),
+                            trailing: IconButton(
+                              icon: Icon(
+                                Icons.edit_calendar,
+                                color: AppColors.primary,
+                              ),
+                              onPressed: selectEndDate,
+                            ),
+                          ),
+                          if (widget.qrcode.type == 4) ...[
+                            Divider(
+                              height: 1,
+                              color: Colors.grey.shade300,
+                            ),
+
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+
+                                  const Text(
+                                    'Configuración semanal',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  ...widget.qrcode.cyclicConfig.map((config) {
+
+                                    return Card(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      child: ListTile(
+                                        leading: const Icon(Icons.calendar_today),
+                                        title: Text(
+                                          weekDayName(config.weekDay),
+                                        ),
+                                        subtitle: Text(
+                                          '${formatMinutes(config.startTime)} - ${formatMinutes(config.endTime)}',
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ),
+                          ],
+                    ],
                   ),
-                  icon: Icon(isEditing ? Icons.save : Icons.edit),
-                  label: Text(
-                    isSaving
-                        ? 'Guardando...'
-                        : isEditing
-                            ? 'Guardar cambios'
-                            : 'Editar código'),
-                  onPressed: isSaving
-                  ? null
-                  : () {
+                ),
+
+                const SizedBox(height: 15),
+                SizedBox(
+                  height: 55,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    icon: Icon(isEditing ? Icons.save : Icons.edit),
+                    label: Text(
+                      isSaving
+                          ? 'Guardando...'
+                          : isEditing
+                              ? 'Guardar cambios'
+                              : 'Editar código'),
+                    onPressed: isSaving
+                    ? null
+                    : () {
+                        if (isEditing) {
+                          saveChanges();
+                        } else {
+                          setState(() {
+                            isEditing = true;
+                          });
+                        }
+                      },
+                  ),
+                ),
+                const SizedBox(height: 15),
+                SizedBox(
+                  height: 55,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(
+                        color: Colors.grey.shade300,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    icon: const Icon(Icons.share),
+                    label: const Text('Compartir'),
+                    onPressed: () {
+                      Share.share(buildShareMessage());
+                    },
+                  ),
+                ),
+                const SizedBox(height: 15),
+                SizedBox(
+                  height: 55,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: isEditing
+                          ? Colors.grey.shade500
+                          : Colors.red.shade400,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    icon: Icon(
+                      isEditing
+                          ? Icons.close
+                          : Icons.delete,
+                    ),
+                    label: Text(
+                      isEditing
+                          ? 'Cancelar edición'
+                          : 'Eliminar código',
+                    ),
+                    onPressed: () {
                       if (isEditing) {
-                        saveChanges();
-                      } else {
                         setState(() {
-                          isEditing = true;
+
+                          isEditing = false;
+
+                          nameController.text = widget.qrcode.name;
+
+                          formData = QrcodeFormData(
+                            type: widget.qrcode.type,
+                            name: widget.qrcode.name,
+                            startDate: DateTime.fromMillisecondsSinceEpoch(
+                              widget.qrcode.startDate,
+                            ),
+                            endDate: widget.qrcode.endDate == 0
+                                ? null
+                                : DateTime.fromMillisecondsSinceEpoch(
+                                    widget.qrcode.endDate,
+                                  ),
+                          );
                         });
+                      } else {
+                        deleteQrcode();
                       }
                     },
+                  ),
                 ),
-              ),
-              const SizedBox(height: 15),
-              SizedBox(
-                height: 55,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.primary,
-                    side: BorderSide(
-                      color: Colors.grey.shade300,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  icon: const Icon(Icons.share),
-                  label: const Text('Compartir'),
-                  onPressed: () {
-                    Share.share(buildShareMessage());
-                  },
-                ),
-              ),
-              const SizedBox(height: 15),
-              SizedBox(
-                height: 55,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: isEditing
-                        ? Colors.grey.shade500
-                        : Colors.red.shade400,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  icon: Icon(
-                    isEditing
-                        ? Icons.close
-                        : Icons.delete,
-                  ),
-                  label: Text(
-                    isEditing
-                        ? 'Cancelar edición'
-                        : 'Eliminar código',
-                  ),
-                  onPressed: () {
-                    if (isEditing) {
-                      setState(() {
-                        isEditing = false;
-                        nameController.text =
-                            widget.qrcode.name;
-                      });
-                    } else {
-                      deleteQrcode();
-                    }
-                  },
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        )
       )
     );
   }
@@ -427,6 +579,14 @@ class _QrcodeDetailScreenState extends State<QrcodeDetailScreen> {
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(formData.startDate),
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            alwaysUse24HourFormat: true,
+          ),
+          child: child!,
+        );
+      },
     );
     if (pickedTime == null) return;
     setState(() {
@@ -453,6 +613,14 @@ class _QrcodeDetailScreenState extends State<QrcodeDetailScreen> {
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(formData.endDate!),
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            alwaysUse24HourFormat: true,
+          ),
+          child: child!,
+        );
+      },
     );
     if (pickedTime == null) return;
     setState(() {
@@ -467,8 +635,7 @@ class _QrcodeDetailScreenState extends State<QrcodeDetailScreen> {
   }
 
   String buildShareMessage() {
-    final hasEndDate =
-        widget.qrcode.type == 4;
+    final hasEndDate = widget.qrcode.endDate != 0;
 
     return [
       'Buen día.',
@@ -486,8 +653,8 @@ class _QrcodeDetailScreenState extends State<QrcodeDetailScreen> {
       '',
       'Válido hasta:',
       hasEndDate
-          ? '-'
-          : widget.qrcode.formattedEndDate,
+      ? widget.qrcode.formattedEndDate
+      : 'Sin fecha límite'
       '',
       'Cerradura:',
       widget.keyData.lockInfo.lockAlias,

@@ -34,6 +34,7 @@ class CreatedQrcodeScreen extends StatelessWidget {
               const SizedBox(height: 25),
               const Text(
                 'Código QR generado correctamente',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -145,14 +146,9 @@ class CreatedQrcodeScreen extends StatelessWidget {
                   label: const Text(
                     'Volver al listado',
                   ),
-
                   onPressed: () {
-                    if (qrcodeType == 4) {
-                      Navigator.pop(context, true);
-                    } else {
-                      Navigator.pop(context, true);
-                      Navigator.pop(context, true);
-                    }
+                    Navigator.pop(context, true);
+                    Navigator.pop(context, true);
                   },
                 ),
               ),

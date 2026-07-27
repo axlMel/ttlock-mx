@@ -16,8 +16,8 @@ class QrcodeFormData {
     this.endDate,
     this.refreshTime = 10,
     this.addType = 0,
-    this.cyclicConfig = const [],
-  });
+    List<CyclicConfig>? cyclicConfig,
+  }) : cyclicConfig = cyclicConfig ?? <CyclicConfig>[];
 
   static const Map<int,String> typeNames = {
     1:'Periódico',
@@ -46,7 +46,7 @@ class QrcodeFormData {
     }
   }
 
-  bool get requiresEndDate => type == 1;
+  bool get requiresEndDate => type == 1 || type == 4;
 
   bool get requiresCyclicConfig => type == 4;
 }

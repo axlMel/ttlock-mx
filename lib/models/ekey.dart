@@ -6,10 +6,10 @@ import 'wifi_info.dart';
 class EKey {
   final int keyId;
   final String userType;
-  final int? groupId;
+  int? groupId;
   final String groupName;
   final LockInfo lockInfo;
-  final LockState lockState;
+  LockState lockState;
   final LockCapabilities capabilities;
   WifiInfo? wifiInfo;
 

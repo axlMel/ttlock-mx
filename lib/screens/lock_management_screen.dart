@@ -46,7 +46,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
       if (!mounted) return;
       setState(() {
         isLoadingWifi = false;
-        lastSync = DateTime.now();;
+        lastSync = DateTime.now();
       });
     } catch (e) {
     if (!mounted) return;
@@ -179,7 +179,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
       isUnlocking = true;
     });
     try {
-      await WifiLockService().unlock(
+      await wifiService.unlock(
         token,
         widget.keyData.lockInfo.lockId,
       );
@@ -194,6 +194,8 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(ErrorHelper.parse(e))));
     } finally {
+      if (!mounted) return;
+
       setState(() {
         isUnlocking = false;
       });
@@ -612,22 +614,53 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                               title: 'QR',
                               subtitle: 'Accesos por link',
                               onTap: () {
-                                Navigator.push(
-                                  context, 
-                                  MaterialPageRoute(
-                                    builder: (_) => QrcodesScreen(
-                                      keyData: widget.keyData,
-                                      communicationMode: selectedMode
-                                    )
-                                  ),
-                                );
+                                if (selectedMode == LockCommunicationMode.wifi) {
+                                  Navigator.push(
+                                    context, 
+                                    MaterialPageRoute(
+                                      builder: (_) => QrcodesScreen(
+                                        keyData: widget.keyData,
+                                        communicationMode: selectedMode
+                                      )
+                                    ),
+                                  );
+                                } else {
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) {
+                                      return AlertDialog(
+                                        title: const Text('Modo Bluetooth no disponible', textAlign: TextAlign.center,),
+                                        content: const Text(
+                                          'No se pueden generar códigos QR vía Bluetooth.\n\nSelecciona el modo WiFi e inténtalo nuevamente.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text('Aceptar'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                }
                               },
                             ),
 
                             buildFeatureCard(
+                              icon: Icons.history,
+                              title: 'Logs',
+                              subtitle: 'Auditoría',
+                              enabled: false,
+                              onTap: () {},
+                            ),
+
+                            buildFeatureCard(
                               icon: Icons.credit_card,
-                              title: 'Tarjetas',
-                              subtitle: 'IC Cards',
+                              title: 'Tarjetas IC',
+                              subtitle: 'Llave maestra',
+                              enabled: false,
                               onTap: () {
                               },
                             ),
@@ -636,20 +669,15 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                               icon: Icons.key_rounded,
                               title: 'eKeys',
                               subtitle: 'Usuarios',
-                              onTap: () {},
-                            ),
-
-                            buildFeatureCard(
-                              icon: Icons.history,
-                              title: 'Logs',
-                              subtitle: 'Auditoría',
+                              enabled: false,
                               onTap: () {},
                             ),
 
                             buildFeatureCard(
                               icon: Icons.people_alt_rounded,
-                              title: 'Usuarios',
-                              subtitle: 'Permisos',
+                              title: 'Control remoto',
+                              subtitle: 'Bluetooth',
+                              enabled: false,
                               onTap: () {},
                             ),
 
@@ -657,6 +685,7 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                               icon: Icons.settings,
                               title: 'Ajustes',
                               subtitle: 'Sistema',
+                              enabled: false,
                               onTap: () {},
                             ),
                           ],
@@ -698,17 +727,20 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    bool enabled = true,
   }) {
     return Material(
       color: Colors.transparent,
 
       child: InkWell(
-        onTap: onTap,
+        onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(24),
 
         child: Ink(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: enabled
+                ? Colors.white
+                : const Color.fromARGB(255, 250, 250, 250),
             borderRadius: BorderRadius.circular(24),
 
             boxShadow: [
@@ -731,11 +763,19 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                   height: 52,
 
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.10),
+                    color: enabled
+                    ? AppColors.primary.withOpacity(0.10)
+                    : Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(18),
                   ),
 
-                  child: Icon(icon, color: AppColors.primary, size: 28),
+                  child: Icon(
+                    icon,
+                    color: enabled
+                        ? AppColors.primary
+                        : Colors.grey,
+                    size: 28,
+                  ),
                 ),
 
                 const SizedBox(height: 14),
@@ -744,11 +784,14 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                   title,
                   textAlign: TextAlign.center,
 
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
+                    color: enabled
+                        ? Colors.black
+                        : Colors.grey,
                   ),
-                ),
+                                  ),
 
                 const SizedBox(height: 4),
 

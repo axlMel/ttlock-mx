@@ -31,12 +31,8 @@ class _LoginScreenState extends State<LoginScreen>
         usernameController.text,
         passwordController.text,
       );
-      print("✅ TOKEN: $token");
-      if (!mounted) return;
       await AuthManager.saveToken(token);
-      setState(() {
-        isLoading = false;
-      });
+      if (!mounted) return;
       Navigator.pushReplacementNamed(
         context,
         '/home',
@@ -61,7 +57,6 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     controller = AnimationController(
       vsync: this,
@@ -74,7 +69,8 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   void dispose() {
-    // TODO: implement dispose
+    usernameController.dispose();
+    passwordController.dispose();
     controller.dispose();
     super.dispose();
   }
@@ -284,14 +280,9 @@ class _LoginScreenState extends State<LoginScreen>
                                 ),
                               )
                             : ElevatedButton(
-                                onPressed: login,
+                                onPressed: isLoading ? null : login,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color.fromARGB(
-                                    255,
-                                    37,
-                                    23,
-                                    100,
-                                  ),
+                                  backgroundColor: Color.fromARGB( 255, 37, 23, 100),
                                   elevation: 4,
                                   shadowColor: Colors.indigo,
                                 ),

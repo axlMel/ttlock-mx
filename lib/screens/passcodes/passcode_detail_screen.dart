@@ -30,6 +30,7 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
   BluetoothPasscodeService bluetoothService = BluetoothPasscodeService();
   bool isEditing = false;
   bool isSaving = false;
+  bool hasChanges = false;
   late TextEditingController nameController;
   late TextEditingController codeController;
   late PasscodesFormData formData;
@@ -57,6 +58,12 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
   }
   Future<void> initialize() async {
     token = await AuthManager.getToken() ?? '';
+  }
+  @override
+  void dispose() {
+    nameController.dispose();
+    codeController.dispose();
+    super.dispose();
   }
 
   Future<void> deletePasscode() async {
@@ -136,6 +143,14 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
       isSaving = true;
     });
     try {
+      if (formData.customCode == null ||
+          formData.customCode!.trim().isEmpty) {
+        throw Exception('Debes ingresar un código.');
+      }
+      final code = int.tryParse(formData.customCode ?? '');
+      if (code == null) {
+        throw Exception('El código debe ser numérico.');
+      }
       if (widget.communicationMode == LockCommunicationMode.bluetooth) {
         await bluetoothService.changePasscode(
           originalPasscode: widget.passcode.keyboardPwd,
@@ -161,7 +176,15 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
       setState(() {
         widget.passcode.keyboardPwd = formData.customCode!;
         widget.passcode.keyboardPwdName = formData.name;
+        widget.passcode.startDate =
+            formData.startDate.millisecondsSinceEpoch;
+
+        widget.passcode.endDate =
+            formData.endDate?.millisecondsSinceEpoch ?? 0;
         isEditing = false;
+        codeController.text = formData.customCode!;
+        nameController.text = formData.name;
+        hasChanges = true;
       });
       
       ScaffoldMessenger.of(
@@ -184,260 +207,283 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LoadingOverlay(
-      isLoading: isSaving, 
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.pop(context,hasChanges);
+      },
+      child: LoadingOverlay(
+        isLoading: isSaving, 
+        child: Scaffold(
           backgroundColor: AppColors.background,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          title: const Text('Detalle del código'),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
-                elevation: 2,
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18)
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.password, size: 60),
-                      const SizedBox(height: 20),
-                      if (!isEditing)
-                        Text(
-                          widget.passcode.keyboardPwd,
-                          style: const TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 3,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            title: const Text('Detalle del código'),
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Card(
+                  elevation: 2,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.password, size: 60),
+                        const SizedBox(height: 20),
+                        if (!isEditing)
+                          Text(
+                            widget.passcode.keyboardPwd,
+                            style: const TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 3,
+                            ),
+                          )
+                        else
+                          TextField(
+                            controller: codeController,
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              formData.customCode = value;
+                            },
+                            decoration: buildInput('Código')
                           ),
-                        )
-                      else
-                        TextField(
-                          controller: codeController,
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            formData.customCode = value;
-                          },
-                          decoration: buildInput('Código')
-                        ),
-                      const SizedBox(height: 20),
-                      if (!isEditing)
-                        Text(
-                          widget.passcode.keyboardPwdName,
-                          style: const TextStyle(fontSize: 18),
-                        )
-                      else
-                        TextField(
-                          controller: nameController,
-                          onChanged: (value) {
-                            formData.name = value;
-                          },
-                          decoration: buildInput('Nombre')
-                        ),
-                    ],
+                        const SizedBox(height: 20),
+                        if (!isEditing)
+                          Text(
+                            widget.passcode.keyboardPwdName,
+                            style: const TextStyle(fontSize: 18),
+                          )
+                        else
+                          TextField(
+                            controller: nameController,
+                            onChanged: (value) {
+                              formData.name = value;
+                            },
+                            decoration: buildInput('Nombre')
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-              Card(
-                elevation: 2,
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
+                Card(
+                  elevation: 2,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
 
-                    ListTile(
-                      leading: Icon(
-                        Icons.category,
-                        color: AppColors.primary,
-                      ),
-                      title: const Text('Tipo'),
-                      subtitle: Text(
-                        widget.passcode.typeName,
-                      ),
-                    ),
-
-                    Divider(
-                      height: 1,
-                      color: Colors.grey.shade300,
-                    ),
-
-                    if (!isEditing)
                       ListTile(
                         leading: Icon(
-                          Icons.calendar_today,
+                          Icons.category,
                           color: AppColors.primary,
                         ),
-                        title: const Text('Inicio'),
+                        title: const Text('Tipo'),
                         subtitle: Text(
-                          widget.passcode.formattedStartDate,
-                        ),
-                      )
-                    else
-                      ListTile(
-                        leading: Icon(
-                          Icons.calendar_today,
-                          color: AppColors.primary,
-                        ),
-                        title: const Text('Inicio'),
-                        subtitle: Text(
-                          widget.passcode.formattedStartDate,
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            Icons.edit_calendar,
-                            color: AppColors.primary,
-                          ),
-                          onPressed: selectStartDate,
+                          widget.passcode.typeName,
                         ),
                       ),
 
-                    if(formData.requiresEndDate)
-                    Divider(
-                      height:1,
-                      color: Colors.grey.shade300,
-                    ),
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.shade300,
+                      ),
 
-                    if(formData.requiresEndDate)
-
-                      if(!isEditing)
+                      if (!isEditing)
                         ListTile(
                           leading: Icon(
-                            Icons.event_busy,
+                            Icons.calendar_today,
                             color: AppColors.primary,
                           ),
-                          title: const Text('Fin'),
+                          title: const Text('Inicio'),
                           subtitle: Text(
-                            widget.passcode.formattedEndDate,
+                            formatDateTime(formData.startDate),
                           ),
                         )
                       else
                         ListTile(
                           leading: Icon(
-                            Icons.event_busy,
+                            Icons.calendar_today,
                             color: AppColors.primary,
                           ),
-                          title: const Text('Fin'),
+                          title: const Text('Inicio'),
                           subtitle: Text(
-                            widget.passcode.formattedEndDate,
+                            formatDateTime(formData.startDate),
                           ),
                           trailing: IconButton(
                             icon: Icon(
                               Icons.edit_calendar,
                               color: AppColors.primary,
                             ),
-                            onPressed: selectEndDate,
+                            onPressed: selectStartDate,
                           ),
                         ),
-                  ],
-                ),
-              ),
 
-              const SizedBox(height: 15),
-              SizedBox(
-                height: 55,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
+                      if(formData.requiresEndDate)
+                      Divider(
+                        height:1,
+                        color: Colors.grey.shade300,
+                      ),
+
+                      if(formData.requiresEndDate)
+
+                        if(!isEditing)
+                          ListTile(
+                            leading: Icon(
+                              Icons.event_busy,
+                              color: AppColors.primary,
+                            ),
+                            title: const Text('Fin'),
+                            subtitle: Text(
+                              formData.endDate == null
+                                  ? '-'
+                                  : formatDateTime(formData.endDate!),
+                            ),
+                          )
+                        else
+                          ListTile(
+                            leading: Icon(
+                              Icons.event_busy,
+                              color: AppColors.primary,
+                            ),
+                            title: const Text('Fin'),
+                            subtitle: Text(
+                              formData.endDate == null
+                                  ? '-'
+                                  : formatDateTime(formData.endDate!),
+                            ),
+                            trailing: IconButton(
+                              icon: Icon(
+                                Icons.edit_calendar,
+                                color: AppColors.primary,
+                              ),
+                              onPressed: selectEndDate,
+                            ),
+                          ),
+                    ],
                   ),
-                  icon: Icon(isEditing ? Icons.save : Icons.edit),
-                  label: Text(
-                    isSaving
-                        ? 'Guardando...'
-                        : isEditing
-                            ? 'Guardar cambios'
-                            : 'Editar código'),
-                  onPressed: isSaving
-                  ? null
-                  : () {
+                ),
+
+                const SizedBox(height: 15),
+                SizedBox(
+                  height: 55,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    icon: Icon(isEditing ? Icons.save : Icons.edit),
+                    label: Text(
+                      isSaving
+                          ? 'Guardando...'
+                          : isEditing
+                              ? 'Guardar cambios'
+                              : 'Editar código'),
+                    onPressed: isSaving
+                    ? null
+                    : () {
+                        if (isEditing) {
+                          saveChanges();
+                        } else {
+                          setState(() {
+                            isEditing = true;
+                          });
+                        }
+                      },
+                  ),
+                ),
+                const SizedBox(height: 15),
+                SizedBox(
+                  height: 55,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(
+                        color: Colors.grey.shade300,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    icon: const Icon(Icons.share),
+                    label: const Text('Compartir'),
+                    onPressed: () {
+                      Share.share(buildShareMessage());
+                    },
+                  ),
+                ),
+                const SizedBox(height: 15),
+                SizedBox(
+                  height: 55,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: isEditing
+                          ? Colors.grey.shade500
+                          : Colors.red.shade400,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    icon: Icon(
+                      isEditing
+                          ? Icons.close
+                          : Icons.delete,
+                    ),
+                    label: Text(
+                      isEditing
+                          ? 'Cancelar edición'
+                          : 'Eliminar código',
+                    ),
+                    onPressed: () {
                       if (isEditing) {
-                        saveChanges();
-                      } else {
                         setState(() {
-                          isEditing = true;
+                          isEditing = false;
+                          codeController.text =
+                              widget.passcode.keyboardPwd;
+                          nameController.text =
+                              widget.passcode.keyboardPwdName;
+                          formData.customCode = widget.passcode.keyboardPwd;
+
+                          formData.name = widget.passcode.keyboardPwdName;
+
+                          formData.startDate = DateTime.fromMillisecondsSinceEpoch(
+                              widget.passcode.startDate);
+
+                          formData.endDate =
+                              widget.passcode.endDate == 0
+                                  ? null
+                                  : DateTime.fromMillisecondsSinceEpoch(
+                                      widget.passcode.endDate);
                         });
+                      } else {
+                        deletePasscode();
                       }
                     },
+                  ),
                 ),
-              ),
-              const SizedBox(height: 15),
-              SizedBox(
-                height: 55,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.primary,
-                    side: BorderSide(
-                      color: Colors.grey.shade300,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  icon: const Icon(Icons.share),
-                  label: const Text('Compartir'),
-                  onPressed: () {
-                    Share.share(buildShareMessage());
-                  },
-                ),
-              ),
-              const SizedBox(height: 15),
-              SizedBox(
-                height: 55,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: isEditing
-                        ? Colors.grey.shade500
-                        : Colors.red.shade400,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  icon: Icon(
-                    isEditing
-                        ? Icons.close
-                        : Icons.delete,
-                  ),
-                  label: Text(
-                    isEditing
-                        ? 'Cancelar edición'
-                        : 'Eliminar código',
-                  ),
-                  onPressed: () {
-                    if (isEditing) {
-                      setState(() {
-                        isEditing = false;
-                        codeController.text =
-                            widget.passcode.keyboardPwd;
-                        nameController.text =
-                            widget.passcode.keyboardPwdName;
-                      });
-                    } else {
-                      deletePasscode();
-                    }
-                  },
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        )
       )
     );
   }
@@ -464,13 +510,22 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
         pickedTime.hour,
         pickedTime.minute,
       );
+      if (formData.endDate != null &&
+          formData.endDate!.isBefore(formData.startDate)) {
+        formData.endDate = formData.startDate.add(
+          const Duration(days: 1),
+        );
+      }
     });
   }
 
   Future<void> selectEndDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: formData.endDate!,
+      initialDate:
+      formData.endDate!.isBefore(formData.startDate)
+          ? formData.startDate
+          : formData.endDate!,
       firstDate: formData.startDate,
       lastDate: DateTime(2030),
     );
@@ -491,6 +546,14 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
         pickedTime.minute,
       );
     });
+  }
+
+  String formatDateTime(DateTime date) {
+    return '${date.day}/'
+        '${date.month}/'
+        '${date.year} '
+        '${date.hour.toString().padLeft(2, '0')}:'
+        '${date.minute.toString().padLeft(2, '0')}';
   }
 
   String buildShareMessage() {
