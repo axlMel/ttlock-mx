@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.api_app"
+    namespace = "com.n3m0.gtencoder"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.api_app"
+        applicationId = "com.n3m0.gtencoder"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -41,4 +41,14 @@ android {
 
 flutter {
     source = "../.."
+}
+
+repositories {
+    flatDir {
+        dirs("libs")
+    }
+}
+
+dependencies {
+    implementation(files("libs/ttlock-release.aar"))
 }

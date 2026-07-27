@@ -146,7 +146,7 @@ class _NewPasscodesScreenState extends State<NewPasscodeScreen>{
                         return;
                       }
                       setState(() {
-                        formData.isCustom = value.first as bool;
+                        formData.isCustom = value.first;
 
                         if (formData.isCustom) {
                           formData.type = 2;

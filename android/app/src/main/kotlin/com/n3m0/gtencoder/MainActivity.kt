@@ -1,4 +1,4 @@
-package com.example.api_app
+package com.n3m0.gtencoder
 
 import io.flutter.embedding.android.FlutterActivity
 import com.ttlock.ttlock_flutter.TtlockFlutterPlugin

@@ -76,7 +76,6 @@ class _NewQrcodesScreenState extends State<NewQrcodeScreen>{
 
   @override
   Widget build(BuildContext context) {
-    final endDate = formData.endDate;
     return LoadingOverlay(
       isLoading: isSaving,
       child: Scaffold(
