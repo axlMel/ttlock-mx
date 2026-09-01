@@ -1,4 +1,4 @@
-import 'package:api_app/models/passcodes_form_data.dart';
+import 'package:api_app/models/passcodes/passcodes_form_data.dart';
 class Passcode {
   final int keyboardPwdId;
   final int lockId;

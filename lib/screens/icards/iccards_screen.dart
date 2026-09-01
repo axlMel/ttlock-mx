@@ -1,34 +1,35 @@
-import 'package:api_app/screens/passcodes/new_passcode_screen.dart';
-import 'package:api_app/services/passcodes/bluetooth_passcode_service.dart';
-import 'package:api_app/services/passcodes/wifi_passcode_service.dart';
+import 'package:api_app/models/ekey.dart';
+import 'package:api_app/models/lock_communication_mode.dart';
+import 'package:api_app/models/iccards/iccards.dart';
+
+import 'package:api_app/screens/icards/iccard_detail_screen.dart';
+import 'package:api_app/screens/icards/new_iccard_screen.dart';
+
+import 'package:api_app/services/iccards/wifi_iccard_service.dart';
+import 'package:api_app/services/auth_manager.dart';
+
 import 'package:api_app/theme/app_colors.dart';
 import 'package:api_app/widgets/loading_overlay.dart';
 import 'package:flutter/material.dart';
-import '../../models/lock_communication_mode.dart';
-import 'package:api_app/models/passcodes/passcode.dart';
-import 'package:api_app/screens/passcodes/passcode_detail_screen.dart';
-import 'package:api_app/helpers/error_helper.dart';
-import 'package:api_app/models/ekey.dart';
-import 'package:api_app/screens/passcodes/created_passcode_screen.dart';
-import 'package:api_app/models/passcodes/passcode_creation_result.dart';
-import 'package:api_app/services/auth_manager.dart';
 
-class PasscodesScreen extends StatefulWidget {
+import 'package:api_app/helpers/error_helper.dart';
+
+class IccardsScreen extends StatefulWidget {
   final EKey keyData;
   final LockCommunicationMode communicationMode;
-  const PasscodesScreen({
+  const IccardsScreen({
     super.key,
     required this.keyData,
     required this.communicationMode,
   });
   @override
-  State<PasscodesScreen> createState() => _PasscodesScreen();
+  State<IccardsScreen> createState() => _IccardScreen();
 }
 
-class _PasscodesScreen extends State<PasscodesScreen> {
-  final WifiPasscodeService wifiService = WifiPasscodeService();
-  final BluetoothPasscodeService bluetoothService = BluetoothPasscodeService();
-  List<Passcode> passcodes = [];
+class _IccardScreen extends State<IccardsScreen> {
+  
+  final WifiIccardService wifiService = WifiIccardService();
+  List<Iccard> iccards = [];
   bool isLoading = true;
   bool isRestarting = false;
   String searchText = '';
@@ -41,70 +42,48 @@ class _PasscodesScreen extends State<PasscodesScreen> {
   }
   Future<void> initialize() async {
     token = await AuthManager.getToken() ?? '';
-    await loadPasscodes();
+    await loadQrcodes();
   }
 
-  Future<void> loadPasscodes() async {
-    if (mounted) {
-      setState(() {
-        isLoading = true;
-      });
-    }
+  Future<void> loadQrcodes() async {
     try {
       if (widget.communicationMode == LockCommunicationMode.wifi) {
-        final data = await wifiService.getAllPasscodes(
+        iccards = await wifiService.getAllQrcodes(
           token,
           widget.keyData.lockInfo.lockId,
         );
-
-        if (!mounted) return;
-
-        setState(() {
-          passcodes = data;
-          isLoading = false;
-        });
       } else {
-        final data = await bluetoothService.getAllPasscodes(
-          lockData: widget.keyData.lockInfo.lockData,
-        );
-
-        if (!mounted) return;
-
-        setState(() {
-          passcodes = data;
-          isLoading = false;
-        });
+        // espacio para servicio BT
       }
       if (!mounted) return;
-    } catch (e) {
-      if (!mounted) return;
-
       setState(() {
         isLoading = false;
       });
-
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(ErrorHelper.parse(e)),
         ),
       );
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
-  List<Passcode> get filteredPasscodes {
+  List<Iccard> get filteredIccards {
     if (searchText.trim().isEmpty) {
-      return passcodes;
+      return iccards;
     }
-    return passcodes.where((passcode) {
+    return iccards.where((iccard) {
       final query = searchText.toLowerCase();
-      return passcode.keyboardPwdName.toLowerCase().contains(query) ||
-          passcode.keyboardPwd.contains(query) ||
-          passcode.typeName.toLowerCase().contains(query);
+      return iccard.cardName.toLowerCase().contains(query) ||
+          iccard.senderUsername.toLowerCase().contains(query);
     }).toList();
   }
 
-  Future<void> deleteAllPasscodes() async {
-    late PasscodeCreationResult result;
+  Future<void> deleteAllQrcodes() async {
     final confirm = await showDialog(
       context: context,
       builder: (_) {
@@ -132,41 +111,16 @@ class _PasscodesScreen extends State<PasscodesScreen> {
     });
     try {
       if (widget.communicationMode == LockCommunicationMode.bluetooth) {
-        final newlockData = await bluetoothService.resetAllPasscodes(
-          lockData: widget.keyData.lockInfo.lockData
-        );
-        widget.keyData.lockInfo.lockData = newlockData;
+        // espacio reservado para servicio BT
       } else {
-        final now = DateTime.now();
-        result = await wifiService.getRandomPasscode(
+        await wifiService.deleteAllQrcodes(
           token,
           widget.keyData.lockInfo.lockId,
-          4,
-          'Eliminar todos',
-          now.millisecondsSinceEpoch,
-          now.add(const Duration(days: 1)).millisecondsSinceEpoch,
         );
         if (!mounted) return;
-        final refresh = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => CreatedPasscodeScreen(
-              result: result,
-              startDate: now,
-              endDate: now.add(const Duration(days: 1)),
-              keyData: widget.keyData,
-              passcodeType: 4,
-            ),
-          ),
-        );
-
-        if (refresh == true) {
-          await loadPasscodes();
-        }
-
-        return;
       }
       if (!mounted) return;
+      await loadQrcodes();
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Codigos eliminados')));
     } catch (e) {
       if (!mounted) return;
@@ -204,7 +158,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
           ),
           actions: [
             IconButton(
-              onPressed: passcodes.isEmpty ? null : deleteAllPasscodes,
+              onPressed: iccards.isEmpty ? null : deleteAllQrcodes,
               icon: const Icon(
                 Icons.restore,
               ),
@@ -229,7 +183,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
             child: TextField(
               onChanged: (value) {
                 setState(() {
-                  searchText = value.trim().toLowerCase();
+                  searchText=value.toLowerCase();
                 });
               },
 
@@ -258,25 +212,25 @@ class _PasscodesScreen extends State<PasscodesScreen> {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           onPressed: () async {
-            //Navegar a NewPasscodeScreen
+            //Navegar a NewQrcodeScreen
             final refresh = await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => NewPasscodeScreen(
+                builder: (_) => NewIccardScreen(
                   keyData: widget.keyData,
                   communicationMode: widget.communicationMode,
                 ),
               ),
             );
             if (refresh == true) {
-              await loadPasscodes();
+              loadQrcodes();
             }
           },
           child: const Icon(Icons.add),
         ),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
-            : passcodes.isEmpty
+            : iccards.isEmpty
             ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -288,7 +242,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'No existen códigos aún',
+                      'No existen códigos QR aún',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 8),
@@ -304,9 +258,9 @@ class _PasscodesScreen extends State<PasscodesScreen> {
                   Expanded(
                     child: ListView.builder(
                       padding: const EdgeInsets.all(16),
-                      itemCount: filteredPasscodes.length,
+                      itemCount: filteredIccards.length,
                       itemBuilder: (context, index) {
-                        final passcode = filteredPasscodes[index];
+                        final iccard = filteredIccards[index];
                         return Card(
                           margin: const EdgeInsets.only(bottom: 8),
                           elevation: 2,
@@ -322,15 +276,15 @@ class _PasscodesScreen extends State<PasscodesScreen> {
                                 final refresh = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => PasscodeDetailScreen(
-                                      passcode: passcode,
+                                    builder: (_) => IccardDetailScreen(
+                                      iccard: iccard,
                                       keyData: widget.keyData,
                                       communicationMode: widget.communicationMode,
                                     ),
                                   ),
                                 );
                                 if (refresh == true) {
-                                  await loadPasscodes();
+                                  loadQrcodes();
                                 }
                               },
                               child: ListTile(
@@ -344,13 +298,13 @@ class _PasscodesScreen extends State<PasscodesScreen> {
                                   backgroundColor: AppColors.primary,
 
                                   child: const Icon(
-                                    Icons.password,
+                                    Icons.qr_code_2,
                                     color: Colors.white,
                                   ),
                                 ),
 
                                 title: Text(
-                                  passcode.keyboardPwdName,
+                                  iccard.cardName,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
 
@@ -369,7 +323,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
                                     children: [
 
                                       Text(
-                                        passcode.formattedStartDate,
+                                        iccard.formattedStartDate,
                                         style: TextStyle(
                                           color: Colors.grey.shade700,
                                           fontSize: 13,
@@ -380,7 +334,7 @@ class _PasscodesScreen extends State<PasscodesScreen> {
 
                                       Expanded(
                                         child: Text(
-                                          passcode.typeName,
+                                          iccard.typeName,
                                           overflow: TextOverflow.ellipsis,
 
                                           style: TextStyle(

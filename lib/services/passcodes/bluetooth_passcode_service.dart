@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:api_app/models/passcode_creation_result.dart';
+import 'package:api_app/models/passcodes/passcode_creation_result.dart';
 import 'package:ttlock_flutter/ttlock.dart';
-import 'package:api_app/models/passcode.dart';
+import 'package:api_app/models/passcodes/passcode.dart';
 
 class BluetoothPasscodeService {
   Future<PasscodeCreationResult> createCustomPasscode({

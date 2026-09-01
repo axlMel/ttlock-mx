@@ -1,9 +1,9 @@
-import 'package:api_app/models/passcodes_form_data.dart';
+import 'package:api_app/models/passcodes/passcodes_form_data.dart';
 import 'package:api_app/services/passcodes/wifi_passcode_service.dart';
 import 'package:api_app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:api_app/models/lock_communication_mode.dart';
-import 'package:api_app/models/passcode_creation_result.dart';
+import 'package:api_app/models/passcodes/passcode_creation_result.dart';
 import 'package:api_app/screens/passcodes/created_passcode_screen.dart';
 import 'package:api_app/widgets/loading_overlay.dart';
 import 'package:api_app/helpers/error_helper.dart';

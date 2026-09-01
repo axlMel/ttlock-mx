@@ -12,6 +12,7 @@ import 'package:ttlock_flutter/ttlock.dart';
 import 'package:api_app/screens/passcodes/passcodes_screen.dart';
 import 'package:api_app/screens/qrcodes/qrcodes_screen.dart';
 import 'package:api_app/screens/records/records_screen.dart';
+import 'package:api_app/screens/icards/iccards_screen.dart';
 
 class LockManagementScreen extends StatefulWidget {
   final EKey keyData;
@@ -671,8 +672,17 @@ class _LockManagementScreenState extends State<LockManagementScreen> {
                               icon: Icons.credit_card,
                               title: 'Tarjetas IC',
                               subtitle: 'Llave maestra',
-                              enabled: false,
+                              enabled: true,
                               onTap: () {
+                                Navigator.push(
+                                  context, 
+                                  MaterialPageRoute(
+                                    builder: (_) => IccardsScreen(
+                                      keyData: widget.keyData,
+                                      communicationMode: selectedMode
+                                    )
+                                  )
+                                );
                               },
                             ),
 

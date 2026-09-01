@@ -1,9 +1,8 @@
 import 'package:api_app/models/ekey.dart';
 import 'package:flutter/material.dart';
-import 'package:api_app/models/passcodes/passcode.dart';
-import 'package:api_app/services/passcodes/wifi_passcode_service.dart';
-import 'package:api_app/services/passcodes/bluetooth_passcode_service.dart';
-import 'package:api_app/models/passcodes/passcodes_form_data.dart';
+import 'package:api_app/models/iccards/iccards.dart';
+import 'package:api_app/services/iccards/wifi_iccard_service.dart';
+import 'package:api_app/models/iccards/iccard_form_data.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:api_app/theme/app_colors.dart';
 import 'package:api_app/helpers/error_helper.dart';
@@ -11,62 +10,90 @@ import 'package:api_app/widgets/loading_overlay.dart';
 import 'package:api_app/models/lock_communication_mode.dart';
 import 'package:api_app/services/auth_manager.dart';
 
-class PasscodeDetailScreen extends StatefulWidget {
+class IccardDetailScreen extends StatefulWidget {
   final EKey keyData;
-  final Passcode passcode;
+  final Iccard iccard;
   final LockCommunicationMode communicationMode;
-  const PasscodeDetailScreen({
+  const IccardDetailScreen({
     super.key,
-    required this.passcode,
+    required this.iccard,
     required this.keyData,
     required this.communicationMode,
   });
   @override
-  State<PasscodeDetailScreen> createState() => _PasscodeDetailScreenState();
+  State<IccardDetailScreen> createState() => _IccardDetailScreenState();
 }
 
-class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
-  WifiPasscodeService wifiService = WifiPasscodeService();
-  BluetoothPasscodeService bluetoothService = BluetoothPasscodeService();
+class _IccardDetailScreenState extends State<IccardDetailScreen> {
+  WifiIccardService wifiService = WifiIccardService();
   bool isEditing = false;
   bool isSaving = false;
   bool hasChanges = false;
   late TextEditingController nameController;
   late TextEditingController codeController;
-  late PasscodesFormData formData;
+  late IccardFormData formData;
   late String token;
+  String weekDayName(int day) {
+    switch (day) {
+      case 1:
+        return 'Lunes';
+      case 2:
+        return 'Martes';
+      case 3:
+        return 'Miércoles';
+      case 4:
+        return 'Jueves';
+      case 5:
+        return 'Viernes';
+      case 6:
+        return 'Sábado';
+      case 7:
+        return 'Domingo';
+      default:
+        return '';
+    }
+  }
+
+  String formatMinutes(int minutes) {
+    final h = (minutes ~/ 60).toString().padLeft(2, '0');
+    final m = (minutes % 60).toString().padLeft(2, '0');
+
+    return '$h:$m';
+  }
 
   @override
   void initState() {
     super.initState();
     initialize();
     nameController = TextEditingController(
-      text: widget.passcode.keyboardPwdName,
+      text: widget.iccard.cardName,
     );
-    codeController = TextEditingController(text: widget.passcode.keyboardPwd);
-    formData = PasscodesFormData(
-      isCustom: widget.passcode.isCustom == 1,
-      type: widget.passcode.keyboardPwdType,
-      name: widget.passcode.keyboardPwdName,
-      customCode: widget.passcode.keyboardPwd,
-      startDate: DateTime.fromMillisecondsSinceEpoch(widget.passcode.startDate),
-
-      endDate: widget.passcode.endDate == 0
+    formData = IccardFormData(
+      type: widget.iccard.cardType,
+      name: widget.iccard.cardName,
+      startDate: DateTime.fromMillisecondsSinceEpoch(
+        widget.iccard.startDate,
+      ),
+      endDate: widget.iccard.endDate == 0
           ? null
-          : DateTime.fromMillisecondsSinceEpoch(widget.passcode.endDate),
+          : DateTime.fromMillisecondsSinceEpoch(
+              widget.iccard.endDate,
+            ),
     );
+  }
+  String formatDate(DateTime date) {
+    return
+        '${date.day}/'
+        '${date.month}/'
+        '${date.year}'
+        ' ${date.hour.toString().padLeft(2, '0')}:'
+        '${date.minute.toString().padLeft(2, '0')}';
   }
   Future<void> initialize() async {
     token = await AuthManager.getToken() ?? '';
   }
-  @override
-  void dispose() {
-    nameController.dispose();
-    codeController.dispose();
-    super.dispose();
-  }
 
-  Future<void> deletePasscode() async {
+  Future<void> deleteQrcode() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) {
@@ -99,23 +126,14 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
     });
     try {
       if (widget.communicationMode == LockCommunicationMode.bluetooth) {
-        await bluetoothService.deletePasscode(
-          passcode: widget.passcode.keyboardPwd,
-          lockData: widget.keyData.lockInfo.lockData
-        );
-        await wifiService.deletePasscode(
-          token,
-          widget.keyData.lockInfo.lockId,
-          widget.passcode.keyboardPwdId,
-          1,
-        );
+          // Bluetooth pendiente
       } else {
-        await wifiService.deletePasscode(
-          token,
-          widget.keyData.lockInfo.lockId,
-          widget.passcode.keyboardPwdId,
-          2
-        );
+          await wifiService.deleteQrcode(
+              token,
+              widget.keyData.lockInfo.lockId,
+              widget.iccard.cardId,
+              0,
+          );
       }
       if (!mounted) return;
 
@@ -143,48 +161,35 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
       isSaving = true;
     });
     try {
-      if (formData.customCode == null ||
-          formData.customCode!.trim().isEmpty) {
-        throw Exception('Debes ingresar un código.');
-      }
-      final code = int.tryParse(formData.customCode ?? '');
-      if (code == null) {
-        throw Exception('El código debe ser numérico.');
-      }
       if (widget.communicationMode == LockCommunicationMode.bluetooth) {
-        await bluetoothService.changePasscode(
-          originalPasscode: widget.passcode.keyboardPwd,
-          customCode: formData.customCode!,
-          startDate: formData.startDate.millisecondsSinceEpoch,
-          endDate: formData.endDate?.millisecondsSinceEpoch ?? 0,
-          lockData: widget.keyData.lockInfo.lockData
-        );
+        //
       } else {
         if (widget.communicationMode == LockCommunicationMode.wifi) {
-          await wifiService.changePasscode(
-            token,
-            widget.keyData.lockInfo.lockId,
-            widget.passcode.keyboardPwdId,
-            formData.name,
-            int.parse(formData.customCode!),
-            formData.startDate.millisecondsSinceEpoch,
-            formData.endDate?.millisecondsSinceEpoch ?? 0,
+          await wifiService.updateQrcode(
+              token,
+              widget.iccard.cardId,
+              formData.name,
+              formData.startDate.millisecondsSinceEpoch,
+              formData.endDate?.millisecondsSinceEpoch,
+              null,
+              formData.type,
+              null,
+              0,
           );
         }
       }
       if (!mounted) return;
       setState(() {
-        widget.passcode.keyboardPwd = formData.customCode!;
-        widget.passcode.keyboardPwdName = formData.name;
-        widget.passcode.startDate =
+        widget.iccard.cardName = formData.name;
+
+        widget.iccard.startDate =
             formData.startDate.millisecondsSinceEpoch;
 
-        widget.passcode.endDate =
+        widget.iccard.endDate =
             formData.endDate?.millisecondsSinceEpoch ?? 0;
         isEditing = false;
-        codeController.text = formData.customCode!;
-        nameController.text = formData.name;
         hasChanges = true;
+        nameController.text = formData.name;
       });
       
       ScaffoldMessenger.of(
@@ -208,7 +213,6 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         Navigator.pop(context,hasChanges);
@@ -221,6 +225,12 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
             backgroundColor: AppColors.background,
             surfaceTintColor: Colors.transparent,
             elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context, hasChanges);
+              },
+            ),
             title: const Text('Detalle del código'),
           ),
           body: SingleChildScrollView(
@@ -238,30 +248,15 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        const Icon(Icons.password, size: 60),
+                        const Icon(Icons.qr_code_2, size: 60),
+                        const SizedBox(height: 20),
+                        SelectableText(
+                            widget.iccard.cardName,
+                        ),
                         const SizedBox(height: 20),
                         if (!isEditing)
                           Text(
-                            widget.passcode.keyboardPwd,
-                            style: const TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 3,
-                            ),
-                          )
-                        else
-                          TextField(
-                            controller: codeController,
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              formData.customCode = value;
-                            },
-                            decoration: buildInput('Código')
-                          ),
-                        const SizedBox(height: 20),
-                        if (!isEditing)
-                          Text(
-                            widget.passcode.keyboardPwdName,
+                            widget.iccard.cardName,
                             style: const TextStyle(fontSize: 18),
                           )
                         else
@@ -295,8 +290,49 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
                         ),
                         title: const Text('Tipo'),
                         subtitle: Text(
-                          widget.passcode.typeName,
+                          widget.iccard.typeName,
                         ),
+                      ),
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.shade300,
+                      ),
+
+                      ListTile(
+                        leading: Icon(
+                          Icons.verified,
+                          color: AppColors.primary,
+                        ),
+                        title: const Text('Usuario que autorizó'),
+                        subtitle: Text(widget.iccard.senderUsername),
+                      ),
+
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.shade300,
+                      ),
+
+                      ListTile(
+                        leading: Icon(
+                          Icons.person,
+                          color: AppColors.primary,
+                        ),
+                        title: const Text('Creado por'),
+                        subtitle: Text(widget.iccard.senderUsername),
+                      ),
+
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.shade300,
+                      ),
+
+                      ListTile(
+                        leading: Icon(
+                          Icons.schedule,
+                          color: AppColors.primary,
+                        ),
+                        title: const Text('Fecha de creación'),
+                        subtitle: Text(widget.iccard.formattedCreateDate),
                       ),
 
                       Divider(
@@ -312,7 +348,7 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
                           ),
                           title: const Text('Inicio'),
                           subtitle: Text(
-                            formatDateTime(formData.startDate),
+                            widget.iccard.formattedStartDate,
                           ),
                         )
                       else
@@ -323,7 +359,9 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
                           ),
                           title: const Text('Inicio'),
                           subtitle: Text(
-                            formatDateTime(formData.startDate),
+                            isEditing
+                                ? formatDate(formData.startDate)
+                                : widget.iccard.formattedStartDate,
                           ),
                           trailing: IconButton(
                             icon: Icon(
@@ -350,9 +388,7 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
                             ),
                             title: const Text('Fin'),
                             subtitle: Text(
-                              formData.endDate == null
-                                  ? '-'
-                                  : formatDateTime(formData.endDate!),
+                              widget.iccard.formattedEndDate,
                             ),
                           )
                         else
@@ -363,9 +399,11 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
                             ),
                             title: const Text('Fin'),
                             subtitle: Text(
-                              formData.endDate == null
-                                  ? '-'
-                                  : formatDateTime(formData.endDate!),
+                              isEditing
+                                  ? (formData.endDate == null
+                                        ? 'Sin fecha límite'
+                                        : formatDate(formData.endDate!))
+                                  : widget.iccard.formattedEndDate,
                             ),
                             trailing: IconButton(
                               icon: Icon(
@@ -375,6 +413,47 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
                               onPressed: selectEndDate,
                             ),
                           ),
+                          if (widget.iccard.cardType == 4) ...[
+                            Divider(
+                              height: 1,
+                              color: Colors.grey.shade300,
+                            ),
+
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+
+                                  const Text(
+                                    'Configuración semanal',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  ...widget.iccard.cyclicConfig.map((config) {
+
+                                    return Card(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      child: ListTile(
+                                        leading: const Icon(Icons.calendar_today),
+                                        title: Text(
+                                          weekDayName(config.weekDay),
+                                        ),
+                                        subtitle: Text(
+                                          '${formatMinutes(config.startTime)} - ${formatMinutes(config.endTime)}',
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ),
+                          ],
                     ],
                   ),
                 ),
@@ -456,30 +535,32 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
                     onPressed: () {
                       if (isEditing) {
                         setState(() {
+
                           isEditing = false;
-                          codeController.text =
-                              widget.passcode.keyboardPwd;
-                          nameController.text =
-                              widget.passcode.keyboardPwdName;
-                          formData.customCode = widget.passcode.keyboardPwd;
 
-                          formData.name = widget.passcode.keyboardPwdName;
+                          nameController.text = widget.iccard.cardName;
 
-                          formData.startDate = DateTime.fromMillisecondsSinceEpoch(
-                              widget.passcode.startDate);
-
-                          formData.endDate =
-                              widget.passcode.endDate == 0
-                                  ? null
-                                  : DateTime.fromMillisecondsSinceEpoch(
-                                      widget.passcode.endDate);
+                          formData = IccardFormData(
+                            type: widget.iccard.cardType,
+                            name: widget.iccard.cardName,
+                            startDate: DateTime.fromMillisecondsSinceEpoch(
+                              widget.iccard.startDate,
+                            ),
+                            endDate: widget.iccard.endDate == 0
+                                ? null
+                                : DateTime.fromMillisecondsSinceEpoch(
+                                    widget.iccard.endDate,
+                                  ),
+                          );
                         });
                       } else {
-                        deletePasscode();
+                        deleteQrcode();
                       }
+                      
                     },
                   ),
                 ),
+                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -500,6 +581,14 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(formData.startDate),
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            alwaysUse24HourFormat: true,
+          ),
+          child: child!,
+        );
+      },
     );
     if (pickedTime == null) return;
     setState(() {
@@ -510,22 +599,13 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
         pickedTime.hour,
         pickedTime.minute,
       );
-      if (formData.endDate != null &&
-          formData.endDate!.isBefore(formData.startDate)) {
-        formData.endDate = formData.startDate.add(
-          const Duration(days: 1),
-        );
-      }
     });
   }
 
   Future<void> selectEndDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate:
-      formData.endDate!.isBefore(formData.startDate)
-          ? formData.startDate
-          : formData.endDate!,
+      initialDate: formData.endDate!,
       firstDate: formData.startDate,
       lastDate: DateTime(2030),
     );
@@ -535,6 +615,14 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(formData.endDate!),
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            alwaysUse24HourFormat: true,
+          ),
+          child: child!,
+        );
+      },
     );
     if (pickedTime == null) return;
     setState(() {
@@ -548,47 +636,30 @@ class _PasscodeDetailScreenState extends State<PasscodeDetailScreen> {
     });
   }
 
-  String formatDateTime(DateTime date) {
-    return '${date.day}/'
-        '${date.month}/'
-        '${date.year} '
-        '${date.hour.toString().padLeft(2, '0')}:'
-        '${date.minute.toString().padLeft(2, '0')}';
-  }
-
   String buildShareMessage() {
-    if (widget.passcode.typeName == 'Eliminar todos') {
-      return [
-        'Código para eliminar registros',
-        '',
-        widget.passcode.keyboardPwd,
-        '',
-        'Este código debe introducirse en la cerradura.',
-        'Al utilizarlo se eliminarán todos los códigos registrados, excepto el administrador.',
-        '',
-        'Cerradura:',
-        widget.keyData.lockInfo.lockAlias,
-      ].join('\n');
-    }
-    final hasEndDate =
-        widget.passcode.keyboardPwdType != 1 &&
-        widget.passcode.keyboardPwdType != 2;
+    final hasEndDate = widget.iccard.endDate != 0;
+
     return [
-      'Muy buen día,',
-      'Has recibido el siguiente código de acceso de tipo '
-      '${widget.passcode.typeName.toLowerCase()}:',
+      'Buen día.',
       '',
-      widget.passcode.keyboardPwd.trim(),
+      'Se te ha compartido una tarjeta de Acceso',
+      '',
+      'Tipo:',
+      widget.iccard.typeName,
+      '',
+      'Heredado por:',
+      widget.iccard.senderUsername,
       '',
       'Válido desde:',
-      widget.passcode.formattedStartDate.trim(),
-      'Hasta:',
+      widget.iccard.formattedStartDate,
+      '',
+      'Válido hasta:',
       hasEndDate
-          ? widget.passcode.formattedEndDate.trim()
-          : 'Indefinido',
-      'Puedes aperturar la bóveda del vehículo económico:',
-      widget.keyData.lockInfo.lockAlias.trim(),
-      'Saludos.',
+      ? widget.iccard.formattedEndDate
+      : 'Sin fecha límite'
+      '',
+      'Cerradura:',
+      widget.keyData.lockInfo.lockAlias,
     ].join('\n');
   }
 

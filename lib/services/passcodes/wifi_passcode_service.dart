@@ -1,8 +1,8 @@
 import 'dart:async';
 import "dart:convert";
 import 'package:http/http.dart' as http;
-import 'package:api_app/models/passcode.dart';
-import 'package:api_app/models/passcode_creation_result.dart';
+import 'package:api_app/models/passcodes/passcode.dart';
+import 'package:api_app/models/passcodes/passcode_creation_result.dart';
 
 class WifiPasscodeService {
   static const String clientId = '096a5c62f3ae47c39e206d410119d7b3';
